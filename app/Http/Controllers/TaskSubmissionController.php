@@ -96,13 +96,45 @@ public function download($path)
 }
 
 
-    public function approve($id)
+public function approve($id)
 {
-    DB::table('submited_tasks')
+    // Récupère la soumission avec les relations
+    $submission = Submited_Task::with(['task', 'user.gamification'])
         ->where('id_Sub_task', $id)
-        ->update(['status' => 'done']);
+        ->firstOrFail();
 
-    return back()->with('success', 'Soumission approuvée avec succès');
+    // Vérifie que le statut était bien 'waiting'
+    if ($submission->status === 'waiting') {
+        DB::transaction(function () use ($submission) {
+            // Met à jour le statut
+            $submission->update(['status' => 'done']);
+
+            // Récupère ou crée le profil gamification
+            $gamification = $submission->user->gamification ?? Gamification::create([
+                'user_id' => $submission->user->id,
+                'point' => 0,
+                'level' => 1,
+                'tasks_done' => 0,
+                'Code' => null,
+                'friendCode' => null
+            ]);
+
+            // Ajoute les points de la tâche
+            $pointsToAdd = $submission->task->point ?? 0;
+            $gamification->increment('point', $pointsToAdd);
+            $gamification->increment('tasks_done');
+
+            // Met à jour le niveau si nécessaire
+            $newLevel = floor($gamification->point / 100) + 1;
+            if ($newLevel > $gamification->level) {
+                $gamification->update(['level' => $newLevel]);
+            }
+        });
+
+        return back()->with('success', 'Soumission approuvée et points attribués');
+    }
+
+    return back()->with('error', 'Seules les soumissions en attente peuvent être approuvées');
 }
 
 public function reject($id)

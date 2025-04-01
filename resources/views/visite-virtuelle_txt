@@ -1,88 +1,121 @@
 <?php
 
-namespace App\Services;
-
-use App\Models\Submited_Task;
-use App\Models\User;
-use Illuminate\Support\Facades\File;
+namespace App\Http\Controllers;
+use App\Models\Task; // Ajoutez cette ligne
+use Illuminate\Support\Facades\DB; // Ajoutez cette ligne si vous utilisez DB
+use App\Services\TaskService;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
+use Symfony\Component\HttpFoundation\StreamedResponse;
+use App\Models\Submited_Task;
+use Illuminate\Support\Facades\Auth;
 
-class TaskService
-{
-    public function storeTaskSubmission($taskId, $userId, $submittedFiles)
-{
-    try {
-        $user = User::findOrFail($userId);
-        $username = Str::slug($user->name);
-        
-        // Normalisation du chemin
-        $folderPath = "Tasks/{$userId}_{$username}";
-        $storagePath = "public/{$folderPath}";
-        
-        // Création du dossier
-        if (!Storage::exists($storagePath)) {
-            Storage::makeDirectory($storagePath, 0755, true);
-        }
 
-        // Récupération ou création de la soumission
-        $submission = Submited_Task::firstOrNew([
-            'id_task' => $taskId,
-            'id_user' => $userId
+class TaskSubmissionController extends Controller
+{
+    protected $taskService;
+
+    public function __construct(TaskService $taskService)
+    {
+        $this->taskService = $taskService;
+    }
+
+    public function store(Request $request, $taskId)
+    {
+        $request->validate([
+            'images.*' => 'required|image|max:2048'
         ]);
 
-        // Nettoyage des fichiers existants
-        $existingFiles = $submission->exists ? 
-            array_filter(explode(',', trim($submission->files, '"'))) : [];
-        
-        $existingFilesMap = [];
+        $result = $this->taskService->storeTaskSubmission(
+            $taskId,
+            auth()->id(),
+            $request->file('images') // Reçoit un tableau associatif [1 => fichier1, 2 => fichier2]
+        );
 
-        foreach ($existingFiles as $filePath) {
-            if (preg_match('/_Image(\d+)\./', basename($filePath), $matches)) {
-                $existingFilesMap[$matches[1]] = trim($filePath, '"');
-            }
-        }
-
-        // Traitement des nouveaux fichiers
-        foreach ($submittedFiles as $imageNumber => $file) {
-            if (!$file || !$file->isValid()) continue;
-
-            // Suppression de l'ancien fichier
-            if (isset($existingFilesMap[$imageNumber])) {
-                $oldPath = str_replace('public/', '', $existingFilesMap[$imageNumber]);
-                Storage::delete("public/{$oldPath}");
-            }
-
-            // Enregistrement du nouveau fichier
-            $extension = $file->getClientOriginalExtension();
-            $filename = "{$userId}_{$username}_Task{$taskId}_Image{$imageNumber}.{$extension}";
-            $filePath = $file->storeAs($storagePath, $filename);
-            
-            // Chemin relatif sans "public/" et sans guillemets
-            $relativePath = str_replace('public/', '', $filePath);
-            $existingFilesMap[$imageNumber] = $relativePath;
-        }
-
-        // Sauvegarde finale
-        ksort($existingFilesMap);
-        
-        $filesList = implode(',', $existingFilesMap);
-        
-        $submission->fill([
-            'status' => 'waiting',
-            'files' => $filesList // Stocké sans guillemets
-        ])->save();
-
-        return [
-            'success' => true,
-            'data' => $submission
-        ];
-
-    } catch (\Exception $e) {
-        return [
-            'success' => false,
-            'error' => $e->getMessage()
-        ];
+        return response()->json($result);
     }
+
+    public function viewSubmissions($id)
+{
+    $task = Task::findOrFail($id);
+    
+    $submissions = DB::table('submited_tasks')
+        ->where('id_task', $id)
+        ->join('users', 'submited_tasks.id_user', '=', 'users.id')
+        ->select('submited_tasks.*', 'users.name as user_name')
+        ->get()
+        ->map(function ($submission) {
+            // Convertir la chaîne de fichiers séparés par des virgules en tableau
+            $files = !empty($submission->files) ? explode(',', $submission->files) : [];
+            
+            // Préparer les données pour la vue
+            $submission->files = array_map(function ($filePath) {
+                return [
+                    'path' => trim($filePath),
+                    'name' => basename(trim($filePath)) // Nom du fichier généré par TaskService
+                ];
+            }, $files);
+            
+            return $submission;
+        });
+
+    return view('tasks.submit-task', [
+        'task' => $task,
+        'submissions' => $submissions
+    ]);
 }
+
+public function download($path)
+{
+    // Nettoyage du chemin
+    $cleanPath = ltrim($path, '/');
+    $storagePath = 'public/' . $cleanPath;
+
+    // Vérification plus robuste
+    if (!Storage::exists($storagePath)) {
+        abort(404, "Le fichier n'existe pas dans le stockage.");
+    }
+
+    // Récupération des infos du fichier
+    $filePath = Storage::path($storagePath);
+    $fileName = basename($filePath);
+    $mimeType = Storage::mimeType($storagePath);
+
+    // Headers pour forcer le téléchargement
+    $headers = [
+        'Content-Type' => $mimeType,
+        'Content-Disposition' => 'attachment; filename="'.$fileName.'"',
+        'Content-Length' => Storage::size($storagePath)
+    ];
+
+    return new StreamedResponse(function() use ($storagePath) {
+        $stream = Storage::readStream($storagePath);
+        fpassthru($stream);
+        fclose($stream);
+    }, 200, $headers);
+}
+
+
+    public function approve($id)
+{
+    DB::table('submited_tasks')
+        ->where('id_Sub_task', $id)
+        ->update(['status' => 'done']);
+
+    return back()->with('success', 'Soumission approuvée avec succès');
+}
+
+public function reject($id)
+{
+    DB::table('submited_tasks')
+        ->where('id_Sub_task', $id)
+        ->update(['status' => 'rejected']);
+
+    return back()->with('success', 'Soumission rejetée avec succès');
+}
+
+
+
+
+
 }

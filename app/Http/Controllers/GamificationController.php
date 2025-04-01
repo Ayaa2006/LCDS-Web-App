@@ -74,12 +74,6 @@ class GamificationController extends Controller
             'submission' => $submission
         ]);
     }
-
-    /**
-     * Get user task submissions
-     *
-     * @return array
-     */
   
     /**
      * Format file strings to consistent array format

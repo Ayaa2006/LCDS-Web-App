@@ -19,7 +19,7 @@ class Submited_Task extends Model
         'files'
     ];
     protected $casts = [
-        'files' => 'string' // Assurez-vous que le champ 'files' est traité comme une chaîne
+        'files' => 'string' 
     ];
 
     public function user()

@@ -663,130 +663,163 @@
     }
 </style>
 <script>
-    document.addEventListener("DOMContentLoaded", function() {
-        @auth
-            var userId = @json(auth()->id());
-            console.log('ID de l\'utilisateur récupéré :', userId);
+document.addEventListener("DOMContentLoaded", function() {
+    @auth
+    var userId = @json(auth()->id());
+    var container = document.getElementById('submissions-container');
 
-            fetch(`/get-submissions/${userId}`)
-                .then(response => response.json())
-                .then(submissions => {
-                    const container = document.getElementById('submissions-container');
-                    
-                    if (submissions.length > 0) {
-                        let tableHtml = `
-                            <h3>Mes Soumissions</h3>
-                            <table>
-                                <thead>
-                                    <tr>
-                                        <th>Tâche</th>
-                                        <th>Statut</th>
-                                        <th>Fichiers</th>
-                                    </tr>
-                                </thead>
-                                <tbody>`;
-                        
-                        submissions.forEach(submission => {
-                            let statusClass = 'status-pending';
-                            if (submission.status.toLowerCase().includes('approv')) {
-                                statusClass = 'status-approved';
-                            } else if (submission.status.toLowerCase().includes('reject')) {
-                                statusClass = 'status-rejected';
-                            }
+    fetch(`/get-submissions/${userId}`)
+        .then(response => {
+            if (!response.ok) throw new Error('Erreur réseau');
+            return response.json();
+        })
+        .then(submissions => {
+            if (submissions.length > 0) {
+                renderSubmissionsTable(submissions);
+            } else {
+                showNoSubmissions(container);
+            }
+        })
+        .catch(error => {
+            console.error('Erreur:', error);
+            showError(container);
+        });
+    @else
+    showLoginRequired(document.getElementById('submissions-container'));
+    @endauth
 
-                            tableHtml += `
-                                <tr>
-                                    <td><strong>${submission.task_title}</strong></td>
-                                    <td><span class="${statusClass}">${submission.status}</span></td>
-                                    <td>`;
-                            
-                            let files = submission.files ? submission.files.split(',') : [];
-                            if (files.length > 0) {
-                                files.forEach(file => {
-                                    const fileName = file.split('/').pop();
-                                    tableHtml += `
-                                        <div class="file-link">
-                                            <a href="#" class="download-link" data-file="${file}" data-filename="${fileName}">
-                                                <i class="fas fa-file-alt"></i> ${fileName}
-                                            </a>
-                                        </div>`;
-                                });
-                            } else {
-                                tableHtml += 'Aucun fichier';
-                            }
+    function renderSubmissionsTable(submissions) {
+        const container = document.getElementById('submissions-container');
+        let tableHtml = `
+            <h3>Mes Soumissions</h3>
+            <table class="submissions-table">
+                <thead>
+                    <tr>
+                        <th>Tâche</th>
+                        <th>Statut</th>
+                        <th>Fichiers</th>
+                    </tr>
+                </thead>
+                <tbody>`;
 
-                            tableHtml += `</td></tr>`;
-                        });
-                        
-                        tableHtml += `</tbody></table>`;
-                        container.innerHTML = tableHtml;
+        submissions.forEach(submission => {
+            const statusClass = getStatusClass(submission.status);
+            const files = submission.files ? submission.files.split(',') : [];
 
-                        // Gestionnaire pour les liens de téléchargement
-                        document.querySelectorAll('.download-link').forEach(link => {
-                            link.addEventListener('click', function(e) {
-                                e.preventDefault();
-                                const fileUrl = this.getAttribute('data-file');
-                                const fileName = this.getAttribute('data-filename');
-                                downloadFile(fileUrl, fileName);
-                            });
-                        });
-                    } else {
-                        container.innerHTML = `
-                            <div class="no-submissions">
-                                <i class="fas fa-inbox" style="font-size: 24px; margin-bottom: 10px;"></i>
-                                <p>Aucune soumission trouvée.</p>
-                            </div>`;
-                    }
-                })
-                .catch(error => {
-                    console.error('Erreur lors de la récupération des soumissions :', error);
-                    document.getElementById('submissions-container').innerHTML = `
-                        <div class="no-submissions">
-                            <i class="fas fa-exclamation-triangle" style="font-size: 24px; margin-bottom: 10px;"></i>
-                            <p>Une erreur est survenue lors de la récupération des soumissions.</p>
-                        </div>`;
-                });
-        @else
-            console.log('Utilisateur non authentifié');
-            document.getElementById('submissions-container').innerHTML = `
-                <div class="no-submissions">
-                    <i class="fas fa-user-lock" style="font-size: 24px; margin-bottom: 10px;"></i>
-                    <p>Veuillez vous connecter pour voir vos soumissions.</p>
-                </div>`;
-        @endauth
+            tableHtml += `
+                <tr>
+                    <td>${submission.task_title || 'Tâche sans nom'}</td>
+                    <td><span class="${statusClass}">${submission.status}</span></td>
+                    <td class="file-links">${
+                        files.length > 0 
+                            ? renderFileLinks(files) 
+                            : 'Aucun fichier'
+                    }</td>
+                </tr>`;
+        });
 
-        // Fonction pour télécharger les fichiers
-        function downloadFile(url, filename) {
-            // Solution alternative pour forcer le téléchargement
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = filename || 'download';
-            a.target = '_blank'; // Optionnel: ouvre dans un nouvel onglet si le téléchargement échoue
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
+        tableHtml += `</tbody></table>`;
+        container.innerHTML = tableHtml;
+
+        setupDownloadHandlers();
+    }
+
+    function getStatusClass(status) {
+        const lowerStatus = status.toLowerCase();
+        return lowerStatus.includes('approv') ? 'status-approved' :
+               lowerStatus.includes('reject') ? 'status-rejected' : 'status-pending';
+    }
+
+    function renderFileLinks(files) {
+        return files.map((file, index) => {
+            const cleanPath = cleanFilePath(file);
+            const fileName = generateDisplayName(cleanPath);
+            const fileExt = getFileExtension(cleanPath);
             
-            // Alternative plus robuste pour les fichiers distants:
-            /*
-            fetch(url, { mode: 'no-cors' })
-                .then(response => response.blob())
-                .then(blob => {
-                    const blobUrl = window.URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = blobUrl;
-                    a.download = filename || 'download';
-                    document.body.appendChild(a);
-                    a.click();
-                    window.URL.revokeObjectURL(blobUrl);
-                    document.body.removeChild(a);
-                })
-                .catch(() => {
-                    // Fallback si fetch échoue (ouvre le lien normalement)
-                    window.open(url, '_blank');
-                });
-            */
-        }
-    });
+            return `
+                <a href="#" 
+                   class="download-btn" 
+                   data-path="${encodeURIComponent(cleanPath)}"
+                   data-filename="${fileName}${fileExt ? '.' + fileExt : ''}">
+                    ${fileName}
+                </a>`;
+        }).join('');
+    }
+
+    function cleanFilePath(path) {
+        return path.replace(/\\/g, '/').replace(/^"|"$/g, '');
+    }
+
+    function getFileExtension(path) {
+        return path.split('.').pop();
+    }
+
+    function generateDisplayName(filename) {
+        const baseName = filename.split('/').pop();
+        
+        // Format: X_username_TaskY_ImageZ.ext → Image Z
+        const imageMatch = baseName.match(/Image(\d+)/);
+        if (imageMatch) return `Image ${imageMatch[1]}`;
+        
+        // Format: X_username_TaskY_original.ext → original
+        const taskMatch = baseName.match(/_\w+_Task\d+_(.*?)(\..*)?$/);
+        if (taskMatch) return taskMatch[1];
+        
+        // Sinon retourner le nom de fichier sans extension
+        return baseName.replace(/\.[^/.]+$/, '');
+    }
+
+    function setupDownloadHandlers() {
+        document.querySelectorAll('.download-btn').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                const path = this.getAttribute('data-path');
+                const filename = this.getAttribute('data-filename');
+                triggerDownload(path, filename);
+            });
+        });
+    }
+
+    function triggerDownload(fullPath, displayName) {
+        const cleanPath = decodeURIComponent(fullPath)
+            .replace(/^"|"$/g, '')
+            .replace(/\\/g, '/')
+            .replace(/^\/+/, '');
+        
+        const url = `/storage/${cleanPath.replace('public/', '')}`;
+        
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = displayName || cleanPath.split('/').pop();
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+
+    function showNoSubmissions(container) {
+        container.innerHTML = `
+            <div class="no-submissions">
+                <i class="fas fa-inbox"></i>
+                <p>Aucune soumission trouvée</p>
+            </div>`;
+    }
+
+    function showError(container) {
+        container.innerHTML = `
+            <div class="no-submissions error">
+                <i class="fas fa-exclamation-triangle"></i>
+                <p>Erreur de chargement des soumissions</p>
+            </div>`;
+    }
+
+    function showLoginRequired(container) {
+        container.innerHTML = `
+            <div class="no-submissions">
+                <i class="fas fa-user-lock"></i>
+                <p>Veuillez vous connecter pour voir vos soumissions</p>
+            </div>`;
+    }
+});
 </script>
 
 

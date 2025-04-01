@@ -228,6 +228,7 @@ Route::get('/submissions/download/{path}', [TaskSubmissionController::class, 'do
 
 
 
+
 Route::get('/gamifications', [GamificationController::class, 'index'])->name('gamifications.index');
 Route::post('/gamifications/add-points', [GamificationController::class, 'addPoints'])->name('gamifications.addPoints');
 Route::get('/gamifications/{userId}', [GamificationController::class, 'show'])->name('gamifications.show');
