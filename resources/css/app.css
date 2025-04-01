@@ -1,0 +1,91 @@
+/* Profile card styling */
+.profile-card {
+    border-radius: 15px;
+    padding: 20px;
+    background-color: #f8f9fc;
+}
+
+.profile-image-wrapper {
+    max-width: 150px;
+}
+
+.profile-image {
+    width: 150px;
+    height: 150px;
+    object-fit: cover;
+    border: 5px solid #4e73df;
+}
+
+.admin-details-wrapper h2 {
+    font-size: 1.5rem;
+    color: #4e73df;
+}
+
+.admin-details-wrapper p {
+    font-size: 1.1rem;
+    margin: 5px 0;
+}
+
+.admin-details-wrapper .btn-primary {
+    background-color: #4e73df;
+    border-color: #4e73df;
+}
+
+.card-footer {
+    background-color: #e9ecef;
+    border-radius: 0 0 15px 15px;
+}
+
+.card-footer h5 {
+    color: #4e73df;
+}
+
+.card-footer p {
+    font-size: 1rem;
+    color: #858796;
+}
+
+
+
+/* for the gamif table */
+body {
+    background-color: #faf8fa;
+}
+
+.table {
+    border-radius: 0.5rem;
+    overflow: hidden;
+}
+
+.table th, .table td {
+    vertical-align: middle;
+}
+
+.card {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+
+/* the gamif level nd points */
+.text-bronze {
+    color: #cd7f32;
+}
+
+.text-silver {
+    color: #c0c0c0;
+}
+
+.text-gold {
+    color: #ffd700;
+}
+
+.points-box {
+    padding: 20px;
+    background-color: #f9f9f9;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.tasks-box {
+    margin-top: 20px;
+}

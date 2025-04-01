@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title></title>
+</head>
+<body>
+
+    <div id="paypal-button-container"></div>
+    <script src="https://sandbox.paypal.com/sdk/js?client-id=AasbLPWkh0JvC7XKJBIGn1a1CBLkbOOx8Uf0e0BIO1p1gZmIENBeOEn9wshTYV_QH7LFHr7P1FpNtg-B"></script>
+
+
+
+    <script>
+        paypal.Buttons({
+            createOrder: function(data, actions) {
+              return actions.order.create({
+                purchase_units: [{
+                  amount: {
+                    value: '20.0' // Set the transaction amount
+                  }
+                }]
+              });
+            },
+            onApprove: function(data, actions) {
+              return actions.order.capture().then(function(details) {
+                alert('Transaction completed by ' + details.payer.name.given_name);
+                // Optionally, you can redirect the user or update the UI here
+              });
+            },
+            onError: function(err) {
+              console.error('An error occurred during the transaction', err);
+            }
+          }).render('#paypal-button-container');
+
+    </script>
+</body>
+</html>

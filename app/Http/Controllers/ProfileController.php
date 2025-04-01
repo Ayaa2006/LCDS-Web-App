@@ -1,0 +1,26 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use App\Models\Reservation;  
+
+class ProfileController extends Controller
+{
+    // Afficher le profil de l'utilisateur avec ses parrainages
+    public function showProfile()
+    {
+        $user = Auth::user();
+        if (!$user) {
+           
+        }
+        else {
+            $reservations = Reservation::where('user_id', $user->id)->get(); // Récupère les réservations pour l'utilisateur
+            $parrainages = $user->parrainages; // Relation des parrainages
+            return view('profile', compact('user', 'reservations', 'parrainages'));   
+        }
+        
+    }
+    
+}
