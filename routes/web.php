@@ -19,6 +19,9 @@ use App\Http\Controllers\TaskSubmissionController;
 use App\Http\Controllers\MachineController;
 use App\Http\Controllers\DecorController;
 use App\Http\Controllers\AgendaCrmController;
+use App\Http\Controllers\PrestationController;
+
+
 // Public route for the /lcds page, using GalerieController's indexsLCDS method to fetch galleries
 Route::get('/lcds', [GalerieController::class, 'indexsLCDS'])->name('lcds');
 
@@ -287,3 +290,6 @@ Route::put('/machines/{machine}', [MachineController::class, 'update'])->name('m
 
 Route::resource('decors', DecorController::class);
 Route::resource('agenda-crm', AgendaCrmController::class);
+
+
+Route::resource('prestations', PrestationController::class);

@@ -52,8 +52,15 @@
     </li>
     <li class="nav-item" id="hover-background">
         <a class="nav-link" href="{{ route('agenda-crm.index') }}">
-        <i class="fas fa-industry"></i>
+        <i class="fas fa-address-book"></i>
             <span>Agenda CRM</span>
+        </a>
+    </li>
+    <li class="nav-item" id="hover-background">
+        <a class="nav-link" href="{{ route('prestations.index') }}">
+        <i class="fas fa-handshake"></i>
+
+            <span>Prestation</span>
         </a>
     </li>
     <!-- Section: Operations -->
