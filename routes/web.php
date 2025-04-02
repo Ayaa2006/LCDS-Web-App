@@ -17,7 +17,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PaimentController;
 use App\Http\Controllers\TaskSubmissionController;
 use App\Http\Controllers\MachineController;
-
+use App\Http\Controllers\DecorController;
 
 // Public route for the /lcds page, using GalerieController's indexsLCDS method to fetch galleries
 Route::get('/lcds', [GalerieController::class, 'indexsLCDS'])->name('lcds');
@@ -284,3 +284,5 @@ Route::get('/machines/create', [MachineController::class, 'create'])->name('mach
 Route::post('/machines', [MachineController::class, 'store'])->name('machines.store');
 Route::get('/machines/{machine}/edit', [MachineController::class, 'edit'])->name('machines.edit');
 Route::put('/machines/{machine}', [MachineController::class, 'update'])->name('machines.update');
+
+Route::resource('decors', DecorController::class);

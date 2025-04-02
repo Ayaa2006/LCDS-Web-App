@@ -86,6 +86,12 @@
         </a>
     </li>
     <li class="nav-item" id="hover-background">
+        <a class="nav-link" href="{{ route('decors.index') }}">
+        <i class="fas fa-theater-masks"></i>
+            <span>Decors</span>
+        </a>
+    </li>
+    <li class="nav-item" id="hover-background">
         <a class="nav-link" href="{{ route('ventes.index') }}">
             <i class="fas fa-shopping-cart"></i>
             <span>Ventes</span>
