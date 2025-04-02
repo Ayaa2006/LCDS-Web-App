@@ -50,7 +50,12 @@
             <span>Photos</span>
         </a>
     </li>
-
+    <li class="nav-item" id="hover-background">
+        <a class="nav-link" href="{{ route('agenda-crm.index') }}">
+        <i class="fas fa-industry"></i>
+            <span>Agenda CRM</span>
+        </a>
+    </li>
     <!-- Section: Operations -->
     <hr class="sidebar-divider">
     <div class="sidebar-heading">Opérations</div>
