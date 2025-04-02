@@ -79,7 +79,12 @@
             <a class="dropdown-item" href="{{ route('stock.create') }}">Ajouter du Stock</a>
         </div>
     </li> --}}
-
+    <li class="nav-item" id="hover-background">
+        <a class="nav-link" href="{{ route('machines.create') }}">
+        <i class="fas fa-industry"></i>
+            <span>Machines</span>
+        </a>
+    </li>
     <li class="nav-item" id="hover-background">
         <a class="nav-link" href="{{ route('ventes.index') }}">
             <i class="fas fa-shopping-cart"></i>

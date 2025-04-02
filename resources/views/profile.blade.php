@@ -262,15 +262,15 @@ window.location.href = "{{ route('dashboard') }}";
         <table class="table">
             <tbody>
                 <tr>
-                    <th>Nom:</th>
+                    <th>Nom :</th>
                     <td>{{ $user->name }}</td>
                 </tr>
                 <tr>
-                    <th>Email:</th>
+                    <th>Email :</th>
                     <td>{{ $user->email }}</td>
                 </tr>
                 <tr>
-                    <th>Code:</th>
+                    <th>Code :</th>
                     <td>{{ $user->code ?? 'Not Set' }}</td>
                 </tr>
             </tbody>
@@ -280,9 +280,9 @@ window.location.href = "{{ route('dashboard') }}";
             <h3><i class="fas fa-medal me-2"></i>Gamification</h3>
             @if($user->gamification)
             <div class="gamification-card">
-                <p><i class="fas fa-level-up-alt me-2"></i>Level: {{ $user->gamification->level }}</p>
-                <p><i class="fas fa-star me-2"></i>Points: {{ $user->gamification->points }}</p>
-                <p><i class="fas fa-tasks me-2"></i>Tasks Completed: {{ $user->gamification->tasks_done }}</p>
+                <p><i class="fas fa-level-up-alt me-2"></i>Level : {{ $user->gamification->level }}</p>
+                <p><i class="fas fa-star me-2"></i>Points : {{ $user->gamification->point }}</p>
+                <p><i class="fas fa-tasks me-2"></i>Tasks Completed : {{ $user->gamification->tasks_done }}</p>
             </div>
             @else
             <p>No gamification data available.</p>

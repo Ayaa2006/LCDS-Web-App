@@ -16,7 +16,7 @@ use App\Http\Controllers\ParrainageController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PaimentController;
 use App\Http\Controllers\TaskSubmissionController;
-
+use App\Http\Controllers\MachineController;
 
 
 // Public route for the /lcds page, using GalerieController's indexsLCDS method to fetch galleries
@@ -235,7 +235,7 @@ Route::get('/gamifications/{userId}', [GamificationController::class, 'show'])->
 Route::get('/gamification', [GamificationController::class, 'index'])
      ->name('gamification')
      ->middleware('auth');
-     Route::get('/get-submissions/{userId}', [GamificationController::class, 'getUserSubmissionsForAjax']);
+Route::get('/get-submissions/{userId}', [GamificationController::class, 'getUserSubmissionsForAjax']);
 
 
 
@@ -274,3 +274,13 @@ Route::get('/profile', [ReservationController::class, 'indexUserReservations'])-
 Route::get('/profile', [ProfileController::class, 'showProfile'])->name('profile.index');
 //pour ladmin
 Route::get('/parrainages', [ParrainageController::class, 'index'])->name('parrainages.index');
+
+
+
+
+Route::resource('machines', MachineController::class);
+
+Route::get('/machines/create', [MachineController::class, 'create'])->name('machines.create');
+Route::post('/machines', [MachineController::class, 'store'])->name('machines.store');
+Route::get('/machines/{machine}/edit', [MachineController::class, 'edit'])->name('machines.edit');
+Route::put('/machines/{machine}', [MachineController::class, 'update'])->name('machines.update');
