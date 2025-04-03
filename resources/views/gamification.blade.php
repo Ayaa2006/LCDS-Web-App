@@ -17,7 +17,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-
     <title>Gamification | La Casa de Selfie</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
@@ -691,7 +690,11 @@ document.addEventListener("DOMContentLoaded", function() {
     function renderSubmissionsTable(submissions) {
         const container = document.getElementById('submissions-container');
         let tableHtml = `
-            <h3>Mes Soumissions</h3>
+        <h3 class="section-title">
+                <i class="fas fa-table"></i>
+                Mes Soumissions
+            </h3>
+            
             <table class="submissions-table">
                 <thead>
                     <tr>
@@ -822,35 +825,34 @@ document.addEventListener("DOMContentLoaded", function() {
 });
 </script>
 
-
-        <!-- Parrainage Section -->
-        <div class="parrainage-box">
-            <h4><i class="fas fa-user-friends"></i> Referral Program</h4>
+ <!-- Parrainage Section -->
+ <div class="parrainage-box">
+            <h4><i class="fas fa-user-friends"></i> Programme de parrainage</h4>
 
             <!-- Form to Use a Friend's Code -->
             <div class="mb-4">
-                <label for="friend-code" class="form-label">Use a friend's referral code</label>
+            <label for="your-code" class="form-label">Votre code de parrainage personnel</label>
                 <div class="d-flex">
-                    <input type="text" class="form-control me-2" id="friend-code" placeholder="Enter your friend's code">
-                    <button class="btn btn-dark-custom" id="validate-code">
-                        <i class="fas fa-check"></i> Validate
+                    <input type="text" class="form-control me-2" id="your-code" readonly 
+                           value="{{ $gamification->code ?? '' }}" 
+                           placeholder="Votre code apparaîtra ici">
+                    <button class="btn btn-dark-custom" id="copy-code">
+                        <i class="fas fa-copy"></i> Copier
                     </button>
                 </div>
+                <small class="text-muted">Partagez ce code avec vos amis pour gagner des points bonus!</small>
+          
             </div>
 
             <!-- Form to Generate and Share Your Code -->
             <div>
-                <label for="your-code" class="form-label">Your personal referral code</label>
+            <label for="friend-code" class="form-label">Utiliser le code de parrainage d'un ami</label>
                 <div class="d-flex">
-                    <input type="text" class="form-control me-2" id="your-code" readonly 
-                           value="{{ $gamification->Code ?? '' }}" 
-                           placeholder="Your code will appear here">
-                    <button class="btn btn-dark-custom" id="copy-code">
-                        <i class="fas fa-copy"></i> Copy
+                    <input type="text" class="form-control me-2" id="friend-code" placeholder="Entrez le code de votre ami">
+                    <button class="btn btn-dark-custom" id="validate-code">
+                        <i class="fas fa-check"></i> Valider
                     </button>
-                </div>
-                <small class="text-muted">Share this code with friends to earn bonus points!</small>
-            </div>
+                </div>  </div>
 
             <!-- Alert Messages -->
             <div id="alert-container" class="mt-3"></div>

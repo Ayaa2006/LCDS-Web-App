@@ -16,7 +16,7 @@ return new class extends Migration
             $table->integer('level')->default(1);
             $table->integer('point')->default(0);
             $table->unsignedBigInteger('user_id')->index('gamifications_user_id_foreign');
-            $table->string('Code', 7)->nullable();
+            $table->string('code', 7)->nullable()->unique(); 
             $table->string('friendCode', 7)->nullable();
             $table->integer('tasks_done');
             $table->timestamps();

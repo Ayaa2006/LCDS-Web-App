@@ -83,62 +83,65 @@ class AuthController extends Controller
 
 
     public function registerSave(Request $request)
-{
-    // Validate the request data
-    Validator::make($request->all(), [
-        'name' => 'required',
-        'email' => 'required|email',
-        'password' => 'required|confirmed',
-        'referral_code' => 'nullable|string|exists:users,code' // validate referral code if provided
-    ])->validate();
-
-    // Generate a unique referral code
-    do {
-        $referralCode = Str::random(8);
-    } while (User::where('code', $referralCode)->exists());
-
-    // Create the user with the referral code
-    $register = User::create([
-        'name' => $request->name,
-        'email' => $request->email,
-        'password' => Hash::make($request->password),
-        'code' => $referralCode
-    ]);
-
-    // Create the Gamification record for the new user
-    Gamification::create([
-        'level' => 1,
-        'point' => 0,
-        'Code' => null,
-        'friendCode' => null,
-        'tasks_done' => 0,
-        'user_id' => $register->id // Link to the newly created user
-    ]);
-
-    if ($request->filled('referral_code')) {
-        $referrer = User::where('code', $request->referral_code)->first();
-
-        // Add entry to the referral table
-        Parrainage::insert([
-            'user_id' => $register->id,
-            'referrer_id' => $referrer->id,
-            'code' => $referrer->code,
-            'name_filleul' => $register->name, // Ensure to include this line
-            'created_at' => now(),
-            'updated_at' => now(),
+    {
+        // Validate the request data
+        Validator::make($request->all(), [
+            'name' => 'required',
+            'email' => 'required|email',
+            'password' => 'required|confirmed',
+            'referral_code' => 'nullable|string|exists:users,code'
+        ])->validate();
+    
+        // Generate a unique referral code for the user
+        do {
+            $referralCode = Str::random(8);
+        } while (User::where('code', $referralCode)->exists());
+    
+        // Generate a unique 7-character gamification code
+        do {
+            $gamificationCode = Str::random(7); // 7 caractères majuscules
+        } while (Gamification::where('code', $gamificationCode)->exists());
+    
+        // Create the user with the referral code
+        $register = User::create([
+            'name' => $request->name,
+            'email' => $request->email,
+            'password' => Hash::make($request->password),
+            'code' => $referralCode
         ]);
-
-        // Add points for the new user and referrer
-        $this->addPointsToUser($register->id, 100);
-        $this->addPointsToUser($referrer->id, 200);
+    
+        // Create the Gamification record with the generated code
+        Gamification::create([
+            'level' => 1,
+            'point' => 0,
+            'code' => $gamificationCode, // Code généré automatiquement
+            'friendCode' => $request->referral_code, // Code de parrainage si fourni
+            'tasks_done' => 0,
+            'user_id' => $register->id
+        ]);
+    
+        if ($request->filled('referral_code')) {
+            $referrer = User::where('code', $request->referral_code)->first();
+    
+            Parrainage::insert([
+                'user_id' => $register->id,
+                'referrer_id' => $referrer->id,
+                'code' => $referrer->code,
+                'name_filleul' => $register->name,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+    
+            // Add points for the new user and referrer
+            $this->addPointsToUser($register->id, 100);
+            $this->addPointsToUser($referrer->id, 200);
+        }
+    
+        // Send confirmation email
+        Mail::to($register->email)->send(new RegistrationCreated($register));
+    
+        return redirect()->route('login');
     }
-
-    // Send confirmation email
-    Mail::to($register->email)->send(new RegistrationCreated($register));
-
-    // Redirect to the login page
-    return redirect()->route('login');
-}
 
 
 

@@ -13,8 +13,7 @@ return new class extends Migration
     {
         Schema::create('parrainages', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->string('name_filleul');  // L'utilisateur qui utilise le code
-            $table->string('code')->nullable(); // Code unique de parrainage
+            $table->unsignedBigInteger('reff_id')->nullable();
             $table->unsignedBigInteger('user_id')->index(); // L'utilisateur qui a généré le code
             $table->timestamps();
 

@@ -103,7 +103,55 @@ class GamificationController extends Controller
     return response()->json($submissions);
 }
 
-    
+public function generateCode(Request $request = null, $autoGenerate = false)
+{
+    try {
+        $user = auth()->user();
+        $gamification = Gamification::firstOrNew(['user_id' => $user->id]);
+
+        if (!empty($gamification->code)) {
+            if ($autoGenerate) {
+                return $gamification->code; // Retourne le code existant si déjà généré
+            }
+            return response()->json([
+                'success' => false,
+                'message' => 'Vous avez déjà un code'
+            ], 400);
+        }
+
+        // Génération automatique du code
+        $code = $autoGenerate ? $this->generateUniqueCode() : $request->input('code');
+
+        if (!$autoGenerate && Gamification::where('code', $code)->exists()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Code déjà utilisé'
+            ], 400);
+        }
+
+        $gamification->code = $code;
+        $gamification->save();
+
+        if ($autoGenerate) {
+            return $code; // Retourne juste le code pour la création automatique
+        }
+
+        return response()->json([
+            'success' => true,
+            'code' => $code,
+            'message' => 'Code généré avec succès'
+        ]);
+    } catch (\Exception $e) {
+        \Log::error("Erreur lors de la génération du code : " . $e->getMessage());
+        return response()->json([
+            'success' => false,
+            'message' => 'Une erreur interne est survenue'
+        ], 500);
+    }
+}
+
+
+
     
 
     

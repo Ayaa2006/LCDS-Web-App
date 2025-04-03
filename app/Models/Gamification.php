@@ -9,7 +9,7 @@ class Gamification extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['level', 'point', 'Code', 'friendCode', 'tasks_done', 'user_id'];
+    protected $fillable = ['level', 'point', 'code', 'friendCode', 'tasks_done', 'user_id'];
 
     // Relationship with User
     public function user()

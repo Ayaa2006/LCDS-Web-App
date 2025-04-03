@@ -204,8 +204,6 @@ Route::get('profile/edit', [AuthController::class, 'edit'])->name('profile-edit'
 Route::put('profile/update', [AuthController::class, 'update'])->name('profile.update');
 Route::delete('profile/delete', [AuthController::class, 'destroyProfile'])->name('deleteAccount');
 // Route::delete('profile/delete/{id}', [AuthController::class, 'destroy'])->name('deleteAccount');
-Route::get('gamification', [AuthController::class, 'indexsss'])->name(name: 'gamification');
-Route::post('gamification/{task}', [AuthController::class, 'completeTask'])->name('complete-task');
 
 
 
@@ -240,7 +238,11 @@ Route::get('/gamification', [GamificationController::class, 'index'])
      ->name('gamification')
      ->middleware('auth');
 Route::get('/get-submissions/{userId}', [GamificationController::class, 'getUserSubmissionsForAjax']);
-
+Route::get('gamification', [AuthController::class, 'indexsss'])->name(name: 'gamification');
+Route::post('gamification/{task}', [AuthController::class, 'completeTask'])->name('complete-task');
+Route::post('/gamification/generate-code', [GamificationController::class, 'generateCode'])
+    ->name('gamification.generate-code')
+    ->middleware('auth');
 
 
 
