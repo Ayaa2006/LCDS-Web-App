@@ -297,48 +297,38 @@ class AuthController extends Controller
 //to show the gamif blade to the user
 public function indexsss()
 {
-    $user = Auth::user()->load('gamification');
-    // dd($user->gamification); // Check if gamification data is loaded
-
-
-    // Initialize variables
-    $gamification = $user->gamification;
-    $pointsToNextLevel = null;
-    $currentLevel = 1; // Default level
-    $currentPoints = 0; // Default points
-
-    if ($gamification) {
-        $currentPoints = $gamification->point;
-
-        // Define the points required to level up
-        $levelUpPoints = [
-            1 => 100,  // Bronze
-            2 => 200,  // Silver
-            3 => 300,  // Gold
-            // Add more levels if necessary
-        ];
-
-        // Determine current level based on points
-        foreach ($levelUpPoints as $level => $points) {
-            if ($currentPoints >= $points) {
-                $currentLevel = $level;
-            }
-        }
-
-        // Calculate points to next level
-        $pointsToNextLevel = isset($levelUpPoints[$currentLevel]) ? $levelUpPoints[$currentLevel] - $currentPoints : 0;
+    // Check authentication
+    if (!Auth::check()) {
+        return redirect()->route('login');
     }
 
-    // Retrieve tasks
-    $tasks = Task::all();
+    $user = Auth::user();
+    
+    // Load gamification with fallback creation
+    $user->load(['gamification' => function($query) {
+        $query->firstOrCreate(
+            ['user_id' => Auth::id()],
+            ['point' => 0, 'level' => 1, 'tasks_done' => 0]
+        );
+    }]);
 
-    // Return the view with all relevant data
+    // Get all available tasks
+    $tasks = Task::all(); // Or any specific query you need
+    
+    // Calculate level progress
+    $gamification = $user->gamification;
+    $currentPoints = $gamification->point;
+    $currentLevel = $gamification->level;
+    $pointsToNextLevel = max(0, (($currentLevel + 1) * 100) - $currentPoints);
+    $currentLevelProgress = min(100, ($currentPoints % 100));
+
     return view('gamification', [
+        'user' => $user,
         'gamification' => $gamification,
-        'pointsToNextLevel' => max(0, $pointsToNextLevel),
+        'tasks' => $tasks, // Make sure this is passed
         'currentLevel' => $currentLevel,
-        'currentPoints' => $currentPoints,
-        'tasks' => $tasks,
+        'pointsToNextLevel' => $pointsToNextLevel,
+        'currentLevelProgress' => $currentLevelProgress
     ]);
 }
 

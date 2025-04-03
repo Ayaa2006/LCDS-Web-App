@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class Parrainage extends Model
 {
     use HasFactory;
-    protected $fillable = ['name_filleul', 'code', 'user_id'];
+    protected $fillable = [ 'reff_id', 'user_id'];
 
 
 }

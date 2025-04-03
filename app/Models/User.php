@@ -71,4 +71,14 @@ class User extends Authenticatable
 
 
 
+public function referrals()
+{
+    return $this->hasMany(Parrainage::class, 'user_id');
+}
+
+public function referredBy()
+{
+    return $this->hasMany(Parrainage::class, 'reff_id');
+}
+
 }

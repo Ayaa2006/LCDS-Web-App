@@ -298,3 +298,10 @@ Route::resource('agenda-crm', AgendaCrmController::class);
 Route::resource('prestations', PrestationController::class);
 
 Route::resource('missions', MissionController::class);
+
+Route::post('/validate-referral-code', [ParrainageController::class, 'validateReferralCode'])
+    ->middleware('auth');
+    Route::post('/test-referral', function(Request $request) {
+        \Log::info('Test endpoint hit');
+        return response()->json(['success' => true]);
+    });

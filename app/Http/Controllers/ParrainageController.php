@@ -8,6 +8,11 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\str;
+use App\Models\Gamification;
+use App\Models\Task;
+use App\Models\Submited_Task;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class ParrainageController extends Controller
 {
@@ -49,26 +54,98 @@ class ParrainageController extends Controller
 
 
     public function validateReferralCode(Request $request)
-    {
-        $code = $request->input('code');
+{
+    try {
+        $request->validate([
+            'code' => 'required|string|size:7'
+        ]);
 
-        // Find user by the code
-        $user = User::where('code', $code)->first();
-
-        if ($user) {
-            Parrainage::create([
-                'name_filleul' => Auth::user()->name,
-                'code' => $code,
-                'user_id' => $user->id,
-            ]);
-
-            return response()->json(['valid' => true, 'message' => 'Referral code is valid']);
-        } else {
-            return response()->json(['valid' => false, 'message' => 'Invalid referral code']);
+        $user = Auth::user();
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Authentication required'
+            ], 401);
         }
+
+        // Vérifier si l'utilisateur a déjà utilisé un code
+        $userGamification = Gamification::where('user_id', $user->id)->first();
+        
+        if ($userGamification->friendCode) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Vous avez déjà utilisé un code de parrainage'
+            ], 400);
+        }
+
+        // Trouver le parrain par son code personnel
+        $referrer = Gamification::where('code', $request->code)->first();
+
+        if (!$referrer) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Code de parrainage invalide'
+            ], 404);
+        }
+
+        // Empêcher l'auto-parrainage
+        if ($referrer->user_id === $user->id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Vous ne pouvez pas utiliser votre propre code'
+            ], 400);
+        }
+
+        DB::beginTransaction();
+
+        // 1. Enregistrer le friendCode pour l'utilisateur actuel
+        $userGamification->update([
+            'friendCode' => $request->code
+        ]);
+         // Débogue pour voir si $referrer est correctement récupéré
+       
+        // 2. Créer la relation de parrainage
+        Parrainage::create([
+            'reff_id' => $referrer->user_id,
+            'user_id' => $user->id
+        ]);
+
+        // 3. Attribuer les points (100 à chaque partie)
+        $referrer->increment('point', 100);
+        $userGamification->increment('point', 100);
+        $referrer->increment('tasks_done', 1);
+        $userGamification->increment('tasks_done', 1);
+        // 4. Compléter la tâche "Parrainage"
+        $task = Task::firstOrCreate(
+            ['title' => 'Parrainage'],
+            ['description' => 'Utilisation code parrainage', 'point' => 100]
+        );
+
+        Submited_Task::create([
+            'id_user' => $user->id,
+            'id_task' => $task->id,
+            'status' => 'completed'
+        ]);
+
+        DB::commit();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Parrainage réussi! 100 points attribués.'
+        ]);
+
+    } catch (\Exception $e) {
+        DB::rollBack();
+        return response()->json([
+            'success' => false,
+            'message' => 'Erreur: ' . $e->getMessage()
+        ], 500);
     }
-
-
-
-
 }
+    
+    
+}
+    
+
+
+

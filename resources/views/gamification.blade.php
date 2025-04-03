@@ -3,7 +3,20 @@
     $userRole = session('role');
     $isLoggedIn = Auth::check();
 @endphp
+@auth
+    @php
+        $gamification = Auth::user()->gamification ?? new App\Models\Gamification([
+            'point' => 0,
+            'level' => 1,
+            'tasks_done' => 0
+        ]);
+    @endphp
 
+    <div class="progress-bar" 
+         style="width: {{ min(100, ($gamification->point % 100)) }}%">
+        Niveau {{ $gamification->level }} - {{ $gamification->point }} points
+    </div>
+@endauth
 
 @if ($userRole === 'admin')
     <script>
@@ -859,7 +872,68 @@ document.addEventListener("DOMContentLoaded", function() {
         </div>
     </div>
 
-    <script>
+<script>
+document.getElementById('validate-code').addEventListener('click', async function() {
+    const button = this;
+    const codeInput = document.getElementById('friend-code');
+    const code = codeInput.value.trim();
+    const alertContainer = document.getElementById('alert-container');
+
+    // Validation de base
+    if (!code || code.length !== 7) {
+        showAlert('Le code doit contenir exactement 7 caractères', 'danger');
+        return;
+    }
+
+    button.disabled = true;
+    button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Validation...';
+
+    try {
+        const response = await fetch('/validate-referral-code', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({ code })
+        });
+        console.log(document.querySelector('meta[name="csrf-token"]').content)
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.message || 'Erreur lors de la validation');
+        }
+
+        showAlert(data.message, 'success');
+        codeInput.value = '';
+        setTimeout(() => window.location.reload(), 1500);
+
+    } catch (error) {
+        showAlert(error.message || 'Une erreur est survenue', 'danger');
+        console.error('Error:', error);
+    } finally {
+        button.disabled = false;
+        button.innerHTML = '<i class="fas fa-check"></i> Valider';
+    }
+});
+
+function showAlert(message, type) {
+    const alert = document.createElement('div');
+    alert.className = `alert alert-${type} alert-dismissible fade show`;
+    alert.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    `;
+    document.getElementById('alert-container').appendChild(alert);
+}
+</script>
+
+
+
+
+
+<script>
         function toggleUploadContainer(taskId) {
             const container = document.getElementById(`upload-container-${taskId}`);
             container.style.display = container.style.display === 'none' ? 'block' : 'none';
@@ -1001,7 +1075,7 @@ document.addEventListener("DOMContentLoaded", function() {
             confirmButtonText: 'OK'
         });
     }
-}
+     }
 
         function showAlert(message, type) {
             const alertDiv = document.createElement('div');
@@ -1048,7 +1122,15 @@ document.addEventListener("DOMContentLoaded", function() {
                 showAlert('Code validation would be processed here in a real implementation', 'info');
             });
         });
-    </script>
+
+
+
+
+
+
+
+        
+</script>
 
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
