@@ -20,6 +20,7 @@ use App\Http\Controllers\MachineController;
 use App\Http\Controllers\DecorController;
 use App\Http\Controllers\AgendaCrmController;
 use App\Http\Controllers\PrestationController;
+use App\Http\Controllers\MissionController;
 
 
 // Public route for the /lcds page, using GalerieController's indexsLCDS method to fetch galleries
@@ -293,3 +294,5 @@ Route::resource('agenda-crm', AgendaCrmController::class);
 
 
 Route::resource('prestations', PrestationController::class);
+
+Route::resource('missions', MissionController::class);

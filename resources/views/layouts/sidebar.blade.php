@@ -4,7 +4,7 @@
     <!-- Sidebar - Brand -->
     <a class="sidebar-brand d-flex justify-content-center align-items-center" href="index.html">
         <div class="sidebar-brand-icon">
-            <img src="{{ asset('image-removebg-preview.png') }}" width="150" height="75" alt="Logo">
+            <img src="{{ asset('image-removebg-preview.png') }}" width="120" height="55" alt="Logo">
         </div>
     </a>
 
@@ -41,6 +41,12 @@
         <a class="nav-link" href="{{ route('reservations.index') }}">
             <i class="fas fa-calendar-check"></i>
             <span>Réservations</span>
+        </a>
+    </li>
+    <li class="nav-item" id="hover-background">
+        <a class="nav-link" href="{{ route('missions.create') }}">
+            <i class="fas fa-calendar-check"></i>
+            <span>Missions</span>
         </a>
     </li>
 
