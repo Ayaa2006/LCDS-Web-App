@@ -30,7 +30,9 @@ class ParrainageController extends Controller
         $user = Auth::user();
 
         // Récupérer les parrainages pour l'utilisateur connecté
-        $parrainages = Parrainage::where('user_id', $user->id)->get();
+        $parrainages = Parrainage::with('filleul')->where('reff_id', $user->id)->get();
+        $parrainages = Parrainage::with('parrain')->where('user_id', $user->id)->get();
+
 
         return view('profile', compact('user', 'parrainages')); // Vue du profil avec parrainages
     }

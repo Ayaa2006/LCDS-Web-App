@@ -81,4 +81,15 @@ public function referredBy()
     return $this->hasMany(Parrainage::class, 'reff_id');
 }
 
+
+public function parrain()
+{
+    return $this->belongsTo(User::class, 'reff_id');
+}
+
+public function filleul()
+{
+    return $this->belongsTo(User::class, 'user_id');
+}
+
 }

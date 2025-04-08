@@ -4,7 +4,8 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use App\Models\Reservation;  
+use App\Models\Reservation; 
+use App\Models\Parrainage;  
 
 class ProfileController extends Controller
 {
@@ -17,7 +18,8 @@ class ProfileController extends Controller
         }
         else {
             $reservations = Reservation::where('user_id', $user->id)->get(); // Récupère les réservations pour l'utilisateur
-            $parrainages = $user->parrainages; // Relation des parrainages
+            $parrainages = Parrainage::with('filleul')->where('reff_id', $user->id)->get();
+            $parrainages = Parrainage::with('parrain')->where('user_id', $user->id)->get();
             return view('profile', compact('user', 'reservations', 'parrainages'));   
         }
         

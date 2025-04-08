@@ -331,32 +331,29 @@ window.location.href = "{{ route('dashboard') }}";
             @endif
         </div>
 
-        <div>
-            <h3 class="mt-4 mb-3"><i class="fas fa-users me-2"></i>Friends Using Your Code</h3>
+        @if($parrainages && $parrainages->count())
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Nom</th>
+                <th>Email</th>
+                <th>Date d'inscription</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach($parrainages as $parrainage)
+                <tr>
+                    <td>{{ $parrainage->parrain->name ?? $parrainage->filleul->name }}</td>
+                    <td>{{ $parrainage->parrain->email ?? $parrainage->filleul->email }}</td>
+                    <td>{{ $parrainage->created_at->format('F d, Y') }}</td>
+                </tr>
+            @endforeach
+        </tbody>
+    </table>
+@else
+    <p>Aucun filleul n’a encore utilisé votre code.</p>
+@endif
 
-            @if($parrainages && $parrainages->count())
-            <table class="table">
-                <thead>
-                    <tr>
-                        <th>Name</th>
-                        <th>Email</th>
-                        <th>Registered At</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach($parrainages as $parrainage)
-                    <tr>
-                        <td>{{ $parrainage->name_filleul }}</td>
-                        <td>{{ $parrainage->email }}</td>
-                        <td>{{ $parrainage->created_at->format('F d, Y') }}</td>
-                    </tr>
-                    @endforeach
-                </tbody>
-            </table>
-            @else
-            <p>No friends have used your code yet.</p>
-            @endif
-        </div>
 
         <div class="mt-4">
             <form action="{{ route('deleteAccount') }}" method="POST" onsubmit="return confirm('Are you sure you want to delete your profile?');">
