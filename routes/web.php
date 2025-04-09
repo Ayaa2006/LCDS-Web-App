@@ -21,6 +21,7 @@ use App\Http\Controllers\DecorController;
 use App\Http\Controllers\AgendaCrmController;
 use App\Http\Controllers\PrestationController;
 use App\Http\Controllers\MissionController;
+use App\Http\Controllers\EvenementController;
 
 
 // Public route for the /lcds page, using GalerieController's indexsLCDS method to fetch galleries
@@ -305,3 +306,9 @@ Route::post('/validate-referral-code', [ParrainageController::class, 'validateRe
         \Log::info('Test endpoint hit');
         return response()->json(['success' => true]);
     });
+
+Route::resource('evenements', EvenementController::class);
+Route::patch('/evenements/{id}/status', [EvenementController::class, 'updateStatus'])
+     ->name('evenements.updateStatus');
+Route::get('/evenements/image/{filename}', [EvenementController::class, 'showImage'])
+     ->name('evenements.showImage');

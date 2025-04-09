@@ -14,9 +14,10 @@
                     <tr>
                         <th>ID</th>
                         <th>Name Filleul</th>
+                        <th>Name Parrain</th>
                         <th>User ID</th>
                         <th>Referrer ID</th>
-                        <th>Code</th>
+                        
                         <th>Created At</th>
                         <th>Updated At</th>
                     </tr>
@@ -25,10 +26,10 @@
                     @forelse ($parrainages as $parrainage)
                         <tr>
                             <td>{{ $parrainage->id }}</td>
-                            <td>{{ $parrainage->name_filleul }}</td>
+                            <td>{{ $parrainage->filleul->name }}</td> 
+                            <td>{{ $parrainage->parrain->name }}</td>     
                             <td>{{ $parrainage->user_id }}</td>
-                            <td>{{ $parrainage->referrer_id }}</td>
-                            <td>{{ $parrainage->code }}</td>
+                            <td>{{ $parrainage->reff_id }}</td>
                             <td>{{ $parrainage->created_at->format('d/m/Y H:i') }}</td>
                             <td>{{ $parrainage->updated_at->format('d/m/Y H:i') }}</td>
                         </tr>

@@ -72,7 +72,13 @@
     <!-- Section: Operations -->
     <hr class="sidebar-divider">
     <div class="sidebar-heading">Opérations</div>
+    <li class="nav-item" id="hover-background">
+        <a class="nav-link" href="{{ route('evenements.index') }}">
+        <i class="fas fa-handshake"></i>
 
+            <span>Evenement</span>
+        </a>
+    </li>
     <li class="nav-item" id="hover-background">
         <a class="nav-link" href="{{ route('livraisons.index') }}">
             <i class="fas fa-truck"></i>
