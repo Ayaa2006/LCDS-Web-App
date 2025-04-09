@@ -6,6 +6,12 @@ use App\Models\Evenement;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Response;
+use App\Models\Abonnement;
+use App\Mail\NewEventPublished;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\EventDeleted;
+
+
 
 class EvenementController extends Controller
 {
@@ -35,7 +41,12 @@ class EvenementController extends Controller
             $validated['mediaAssocie'] = $request->file('mediaAssocie')->store('medias/evenements');
         }
 
-        Evenement::create($validated);
+       
+        $event = Evenement::create($validated);
+
+        if ($event->statut === 'publie') {
+            $this->sendNotificationToSubscribers($event);
+        }
 
         return redirect()->route('evenements.index')
                        ->with('success', 'Événement créé avec succès');
@@ -46,12 +57,20 @@ class EvenementController extends Controller
 public function updateStatus(Request $request, $id)
 {
     $event = Evenement::findOrFail($id);
-    
+    $newStatus = $request->input('new_status');
     $validated = $request->validate([
         'new_status' => 'required|in:supprimer,publie,archive'
     ]);
     
     $event->update(['statut' => $validated['new_status']]);
+
+    // Envoyer les emails si le nouveau statut est 'publie'
+    if ($newStatus === 'publie') {
+        $this->sendNotificationToSubscribers($event);
+    } elseif ($newStatus === 'supprimer') {
+        $this->sendDeletionNotification($event);
+    }
+
     
     return back()->with('success', 'Statut de l\'événement mis à jour avec succès');
 }
@@ -61,7 +80,7 @@ public function destroy($id)
 {
     $event = Evenement::findOrFail($id);
     $event->update(['statut' => 'supprimer']);
-    
+    $this->sendDeletionNotification($event);
     return back()->with('success', 'Événement supprimé avec succès');
 }
 
@@ -80,5 +99,24 @@ public function showImage($filename)
     $response->header("Content-Type", $type);
     
     return $response;
+}
+
+protected function sendNotificationToSubscribers($event)
+{
+    $subscribers = Abonnement::all();
+    
+    foreach ($subscribers as $subscriber) {
+        Mail::to($subscriber->email)
+            ->queue(new NewEventPublished($event));
+    }
+}
+protected function sendDeletionNotification($event)
+{
+    $subscribers = Abonnement::all();
+    
+    foreach ($subscribers as $subscriber) {
+        Mail::to($subscriber->email)
+            ->queue(new EventDeleted($event));
+    }
 }
 }

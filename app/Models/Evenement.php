@@ -19,4 +19,15 @@ class Evenement extends Model
     protected $casts = [
         'datePublication' => 'datetime'
     ];
+
+    // Dans le modèle Evenement
+public function markAsDeleted()
+{
+    if ($this->statut !== 'supprimer') {
+        $this->update(['statut' => 'supprimer']);
+        event(new EventDeleted($this)); // Déclencher un event si vous utilisez des listeners
+        return true;
+    }
+    return false;
+}
 }
