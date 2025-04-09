@@ -44,9 +44,40 @@
             color: white;
             padding: 20px 0;
         }
+        .contact-form {
+            background-color: #f8f9fa;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.1);
+            margin-top: 30px;
+        }
+        .contact-form {
+        background-color: #fff;
+        padding: 30px;
+        border-radius: 10px;
+        box-shadow: 0 0 15px rgba(0,0,0,0.1);
+        margin-top: 30px;
+    }
+    
+    /* Style personnalisé pour le bouton noir */
+    .btn-custom-black {
+        background-color: #000;
+        border-color: #000;
+        color: black;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-custom-black:hover {
+        background-color: #333;
+        border-color: #333;
+        color: white;
+    }
+    
+    .btn-custom-black:focus {
+        box-shadow: 0 0 0 0.25rem rgba(0, 0, 0, 0.25);
+    }
     </style>
 </head>
-
 
 <body>
  @include('navbar')
@@ -58,8 +89,6 @@
         <p>Contact</p>
     </div>
 </header>
-
-
 
     <!-- Section Contact -->
     <section class="py-5">
@@ -106,6 +135,52 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Formulaire de contact ajouté ici -->
+            <!-- Formulaire de contact avec bouton noir -->
+<div class="contact-form">
+    <h3 class="text-center mb-4">Envoyez-nous un message</h3>
+    
+    @if(session('success'))
+        <div class="alert alert-success">
+            {{ session('success') }}
+        </div>
+    @endif
+
+    <form method="POST" action="{{ route('contact.store') }}">
+        @csrf
+
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label for="name" class="form-label">Prénom *</label>
+                <input type="text" class="form-control" id="name" name="name" required>
+            </div>
+
+            <div class="col-md-6 mb-3">
+                <label for="last_name" class="form-label">Nom *</label>
+                <input type="text" class="form-control" id="last_name" name="last_name" required>
+            </div>
+        </div>
+
+        <div class="mb-3">
+            <label for="email" class="form-label">Email *</label>
+            <input type="email" class="form-control" id="email" name="email" required>
+        </div>
+
+        <div class="mb-3">
+            <label for="message" class="form-label">Votre message *</label>
+            <textarea class="form-control" id="message" name="message" rows="5" required></textarea>
+        </div>
+
+        <div class="text-center">
+            <button type="submit" class="btn btn-custom-black bg-black text-white btn-lg">
+                <i class="fas fa-paper-plane me-2"></i> Envoyer
+            </button>
+        </div>
+    </form>
+</div>
+
+
         </div>
     </section>
 
@@ -120,5 +195,4 @@
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.min.js"></script>
 </body>
-
 </html>

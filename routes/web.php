@@ -22,6 +22,7 @@ use App\Http\Controllers\AgendaCrmController;
 use App\Http\Controllers\PrestationController;
 use App\Http\Controllers\MissionController;
 use App\Http\Controllers\EvenementController;
+use App\Http\Controllers\ContactController;
 
 
 // Public route for the /lcds page, using GalerieController's indexsLCDS method to fetch galleries
@@ -35,9 +36,7 @@ Route::get('rendez-vous', function () {
     return view('service-photographie');
 })->name('rendez-vous');
 
-Route::get('contact', function () {
-    return view('Contact');
-})->name('contact');
+
 
 Route::get('vs', function () {
     return view('visite-virtuelle');
@@ -312,3 +311,10 @@ Route::patch('/evenements/{id}/status', [EvenementController::class, 'updateStat
      ->name('evenements.updateStatus');
 Route::get('/evenements/image/{filename}', [EvenementController::class, 'showImage'])
      ->name('evenements.showImage');
+
+
+Route::get('contact', function () {
+        return view('Contact');
+    })->name('contact');
+Route::post('/contact', [ContactController::class, 'store'])->name('contact.store');
+Route::get('/messages', [ContactController::class, 'index'])->name('contact.messages');

@@ -174,6 +174,12 @@
             <span>Notifications</span>
         </a>
     </li>
+    <li class="nav-item" id="hover-background">
+        <a class="nav-link" href="{{ route('contact.messages') }}">
+        <i class="fas fa-envelope"></i>
+            <span>Messages</span>
+        </a>
+    </li>
 
     <!-- Section: Support & Settings -->
     <hr class="sidebar-divider">
