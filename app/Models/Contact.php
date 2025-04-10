@@ -15,6 +15,17 @@ class Contact extends Model
         'name',
         'last_name',
         'email',
+        'object',
         'message'
     ];
+
+    public function reponses()
+{
+    return $this->hasMany(Reponse::class);
+}
+
+public function hasReponse()
+{
+    return $this->reponses()->exists();
+}
 }

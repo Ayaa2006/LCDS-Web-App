@@ -318,3 +318,4 @@ Route::get('contact', function () {
     })->name('contact');
 Route::post('/contact', [ContactController::class, 'store'])->name('contact.store');
 Route::get('/messages', [ContactController::class, 'index'])->name('contact.messages');
+Route::post('/contact/{id}/reply', [ContactController::class, 'reply'])->name('contact.reply');

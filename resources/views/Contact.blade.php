@@ -166,6 +166,10 @@
             <label for="email" class="form-label">Email *</label>
             <input type="email" class="form-control" id="email" name="email" required>
         </div>
+        <div class="mb-3">
+            <label for="object" class="form-label">objet *</label>
+            <input type="text" class="form-control" id="object" name="object" required>
+        </div>
 
         <div class="mb-3">
             <label for="message" class="form-label">Votre message *</label>
