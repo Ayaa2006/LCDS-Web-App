@@ -4,6 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>La Casa de Selfie - Services de photographie</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
@@ -126,6 +127,38 @@
         font-size: 2rem;
     }
 
+    /* Styles pour la modal de sélection de fond */
+    #backgroundSelectionModal .bg-option {
+        transition: all 0.3s ease;
+        border: 2px solid transparent;
+    }
+
+    #backgroundSelectionModal .bg-option:hover {
+        transform: scale(1.05);
+        border-color: #0d6efd;
+    }
+
+    #backgroundSelectionModal .bg-option.selected {
+        border-color: #0d6efd;
+        box-shadow: 0 0 10px rgba(13, 110, 253, 0.5);
+    }
+
+    #processedPhoto {
+        max-width: 100%;
+        height: auto;
+        border: 1px solid #ddd;
+        background-size: cover;
+    }
+
+    /* Section de confirmation */
+    #confirmationSection {
+        display: none;
+    }
+
+    #confirmationSection p {
+        margin-bottom: 0.5rem;
+    }
+
     /* Responsive */
     @media (max-width: 767px) {
         #paypal_div {
@@ -141,6 +174,18 @@
             margin-bottom: 15px;
         }
     }
+    #displayPhoto {
+    max-width: 100%;
+    height: auto;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    margin-bottom: 20px;
+    transition: transform 0.3s ease;
+}
+
+#displayPhoto:hover {
+    transform: scale(1.02);
+}
     </style>
 </head>
 
@@ -206,7 +251,7 @@
                 <!-- Carte produit améliorée -->
                 <div class="product-card">
                     <div class="image-container-locked">
-                        <img src="{{ asset('360 Image/images/2.jpeg') }}" alt="Exemple de photo professionnelle"
+                        <img id="finalPhotoPreview" src="{{ asset('360 Image/images/2.jpeg') }}" alt="Exemple de photo professionnelle"
                             style="width: 100%; height: auto; border-radius: 8px;">
                         <div class="lock-overlay">
                             <i class="fas fa-lock"></i>
@@ -242,54 +287,144 @@
         </div>
     </div>
 
+    <!-- Modal de sélection de fond -->
+    <div id="backgroundSelectionModal" class="modal fade" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Personnalisez votre photo</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <h6>Votre photo sans fond</h6>
+                                <img id="processedPhoto" src="" class="img-fluid rounded" style="max-height: 300px;">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <h6>Choisissez un arrière-plan</h6>
+                                <div class="row" id="backgroundOptions">
+                                    <div class="col-4 mb-2">
+                                        <img src="{{ asset('assets_casa_de_selfie/white.jpg') }}" 
+                                             class="img-thumbnail bg-option" 
+                                             data-bg="white" 
+                                             style="cursor: pointer; height: 80px;">
+                                    </div>
+                                    <div class="col-4 mb-2">
+                                        <img src="{{ asset('assets_casa_de_selfie/black.jpg') }}" 
+                                             class="img-thumbnail bg-option" 
+                                             data-bg="black" 
+                                             style="cursor: pointer; height: 80px;">
+                                    </div>
+                                    <div class="col-4 mb-2">
+                                        <img src="{{ asset('assets_casa_de_selfie/bg7.jpg') }}" 
+                                             class="img-thumbnail bg-option" 
+                                             data-bg="bg7" 
+                                             style="cursor: pointer; height: 80px;">
+                                    </div>
+                                    <div class="col-4 mb-2">
+                                        <button class="btn btn-outline-secondary w-100 h-100 d-flex flex-column align-items-center justify-content-center"
+                                                data-bg="none">
+                                            <i class="fas fa-times mb-2"></i>
+                                            <span>Aucun fond</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                    <button type="button" id="confirmBackgroundBtn" class="btn btn-primary">Confirmer et procéder au paiement</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Photo Submission Form - Modifié -->
     <section>
         <div class="container mt-5">
             <div class="row justify-content-center">
                 <div class="col-md-8">
-                    <form class="bg-light p-4 rounded" action="{{ route('save.payment') }}" method="POST">
-                        @csrf
-                        <h4 class="text-center mb-4">Soumettez votre photo</h4>
+                    <!-- Ajout d'une div pour afficher les résultats après paiement -->
+                    <div id="paymentSuccessSection" class="bg-light p-4 rounded mb-4" style="display: none;">
+                        <h4 class="text-center mb-4">Votre photo est prête !</h4>
                         <div class="row mb-3">
                             <div class="col-md-6">
-                                <label for="fname" class="form-label">Nom</label>
-                                <input type="text" class="form-control" id="fname" name="fname" placeholder="Nom"
-                                    required>
+                                <p><strong>Nom :</strong> <span id="displayFname"></span></p>
                             </div>
                             <div class="col-md-6">
-                                <label for="lname" class="form-label">Prénom</label>
-                                <input type="text" class="form-control" id="lname" name="lname" placeholder="Prénom"
-                                    required>
+                                <p><strong>Prénom :</strong> <span id="displayLname"></span></p>
+                            </div>
+                        
+                            <div class="col-md-12">
+                                <p><strong>Email :</strong> <span id="displayEmail"></span></p>
+                            </div>
+                            <div class="col-md-12">
+                                <p><strong>Adresse :</strong> <span id="displayAdress"></span></p>
                             </div>
                         </div>
-                        <div class="row mb-3">
-                            <div class="col-md-12">
-                                <label for="email" class="form-label">Email</label>
-                                <input type="email" class="form-control" id="email" name="email"
-                                    placeholder="exple@email.com" required>
-                            </div>
-                            <div class="col-md-12">
-                                <label for="address" class="form-label">Adresse</label>
-                                <input type="text" class="form-control" id="adress" name="adress" placeholder="Adresse"
-                                    required>
-                            </div>
-                            <input type="hidden" id="mode_paiement" name="mode_paiement" value="">
-<input type="hidden" id="montant" name="montant" value="">
-                            <div class="col-md-12 mt-3">
-                                <label for="capturedPhoto" class="form-label">Votre Photo</label>
-                                <div class="image-container-locked" id="photoContainer">
-                                    <img id="capturedPhoto" class="img-fluid" />
-                                    <div class="lock-overlay" id="photoLockOverlay" style="display: none;">
-                                        <i class="fas fa-lock fa-3x"></i>
-                                    </div>
+                        <div class="row mb-3 justify-content-center">
+        <div class="col-md-6 text-center">
+            <img id="displayPhoto" src="" class="img-fluid rounded" style="max-height: 300px; border: 2px solid #ddd;">
+        </div>
+    </div>
+                        <div class="text-center mt-4">
+                            <button id="finalDownloadBtn" class="btn btn-success">
+                                <i class="fas fa-download me-1"></i>Télécharger ma photo
+                            </button>
+                        </div>
+                    </div>
+                    <!-- Formulaire principal -->
+                    <form id="photoForm" class="bg-light p-4 rounded" action="{{ route('save.payment') }}" method="POST">
+                        @csrf
+                        <h4 class="text-center mb-4">Soumettez votre photo</h4>
+                        
+                        <!-- Section des informations personnelles -->
+                        <div id="personalInfoSection">
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label for="fname" class="form-label">Nom</label>
+                                    <input type="text" class="form-control" id="fname" name="fname" placeholder="Nom" required>
                                 </div>
-                                <input type="hidden" id="img" name="img">
-                                <div id="photoStatus" class="alert alert-warning mt-2" style="display: none;">
-                                    <i class="fas fa-info-circle me-2"></i>Pour télécharger cette photo en haute
-                                    qualité, veuillez compléter le paiement.
-                                    <button type="button" class="btn btn-sm btn-warning ms-2"
-                                        onclick="showPaypalDiv()">Payer maintenant</button>
+                                <div class="col-md-6">
+                                    <label for="lname" class="form-label">Prénom</label>
+                                    <input type="text" class="form-control" id="lname" name="lname" placeholder="Prénom" required>
                                 </div>
+                            </div>
+                            <div class="row mb-3">
+                                <div class="col-md-12">
+                                    <label for="email" class="form-label">Email</label>
+                                    <input type="email" class="form-control" id="email" name="email" placeholder="exple@email.com" required>
+                                </div>
+                                <div class="col-md-12">
+                                    <label for="address" class="form-label">Adresse</label>
+                                    <input type="text" class="form-control" id="adress" name="adress" placeholder="Adresse" required>
+                                </div>
+                                <input type="hidden" id="mode_paiement" name="mode_paiement" value="">
+                                <input type="hidden" id="montant" name="montant" value="">
+                            </div>
+                        </div>
+
+                        <!-- Section de la photo -->
+                        <div class="col-md-12 mt-3">
+                            <label for="capturedPhoto" class="form-label">Votre Photo</label>
+                            <div class="image-container-locked" id="photoContainer">
+                                <img id="capturedPhoto" class="img-fluid" />
+                                <div class="lock-overlay" id="photoLockOverlay" style="display: none;">
+                                    <i class="fas fa-lock fa-3x"></i>
+                                </div>
+                            </div>
+                            
+                            <input type="hidden" id="img" name="img">
+                            <div id="photoStatus" class="alert alert-warning mt-2" style="display: none;">
+                                <i class="fas fa-info-circle me-2"></i>Pour télécharger cette photo en haute
+                                qualité, veuillez compléter le paiement.
+                                <button type="button" class="btn btn-sm btn-warning ms-2" onclick="showPaypalDiv()">Payer maintenant</button>
                             </div>
                         </div>
 
@@ -310,10 +445,14 @@
                             </button>
                             <button type="button" id="captureBtn" class="btn btn-success" style="display:none;">
                                 <i class="fas fa-camera-retro me-1"></i>Capturer la photo
+                            </button> <br><br>
+                            <button type="button" id="removeBgBtn" class="btn btn-warning" style="display:none;">
+                                <i class="fas fa-magic me-1"></i>Supprimer le fond
                             </button>
-                            <button type="button" id="downloadBtn" class="btn btn-info" disabled>
-                                <i class="fas fa-download me-1"></i>Télécharger en haute qualité
+                            <button type="button" id="payNowBtn" class="btn btn-primary" style="display:none;">
+                                <i class="fas fa-credit-card me-1"></i>Payer maintenant
                             </button>
+                           
                         </div>
 
                         <!-- Prévisualisation caméra -->
@@ -323,6 +462,35 @@
                             <input type="file" id="fileInput" accept="image/*">
                         </div>
                     </form>
+
+                    <!-- Section de confirmation après paiement -->
+                    <div id="confirmationSection" class="bg-light p-4 rounded mt-4" style="display: none;">
+                        <h4 class="text-center mb-4">Votre photo est prête !</h4>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <p><strong>Nom :</strong> <span id="confirmationFname"></span></p>
+                                <p><strong>Prénom :</strong> <span id="confirmationLname"></span></p>
+                            </div>
+                            <div class="col-md-6">
+                                <p><strong>Email :</strong> <span id="confirmationEmail"></span></p>
+                                <p><strong>Adresse :</strong> <span id="confirmationAdress"></span></p>
+                            </div>
+                            <label for="capturedPhoto" class="form-label">Votre Photo</label>
+                            <div class="image-container-locked" id="photoContainer">
+                                <img id="capturedPhoto" class="img-fluid" />
+                                <div class="lock-overlay" id="photoLockOverlay" style="display: none;">
+                                    <i class="fas fa-lock fa-3x"></i>
+                                </div>
+                            </div>
+                            
+                            <input type="hidden" id="img" name="img">
+                        </div>
+                        <div class="text-center">
+                            <button type="button" id="finalDownloadBtn" class="btn btn-success">
+                                <i class="fas fa-download me-1"></i>Télécharger votre photo
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -332,9 +500,7 @@
     @include('footer')
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script
-        src="https://www.sandbox.paypal.com/sdk/js?client-id=AasbLPWkh0JvC7XKJBIGn1a1CBLkbOOx8Uf0e0BIO1p1gZmIENBeOEn9wshTYV_QH7LFHr7P1FpNtg-B">
-    </script>
+    <script src="https://www.sandbox.paypal.com/sdk/js?client-id=AasbLPWkh0JvC7XKJBIGn1a1CBLkbOOx8Uf0e0BIO1p1gZmIENBeOEn9wshTYV_QH7LFHr7P1FpNtg-B"></script>
     <script>
     // Variables globales
     let userChoice = null;
@@ -348,6 +514,8 @@
     const capturedPhoto = document.getElementById("capturedPhoto");
     const photoDataInput = document.getElementById("img");
     const downloadBtn = document.getElementById("downloadBtn");
+    const removeBgBtn = document.getElementById("removeBgBtn");
+    const payNowBtn = document.getElementById("payNowBtn");
     const fileInput = document.getElementById("fileInput");
     const initialOptions = document.getElementById("initialOptions");
     const options = document.getElementById("options");
@@ -355,28 +523,204 @@
     const openCameraBtn = document.getElementById("openCameraBtn");
     const chooseUpload = document.getElementById("chooseUpload");
     let stream;
+    let removedBgImageUri = null;
+    let selectedBackground = null;
+    const backgrounds = [
+        { id: 'white', name: 'Fond blanc', image: '{{ asset("assets_casa_de_selfie/white.jpg") }}' },
+        { id: 'black', name: 'Fond noir', image: '{{ asset("assets_casa_de_selfie/black.jpg") }}' },
+        { id: 'bg7', name: 'Fond orange', image: '{{ asset("assets_casa_de_selfie/bg7.jpg") }}' }
+    ];
 
     // Afficher le modal PayPal
     function showPaypalDiv() {
         document.getElementById("paypal_div").style.display = "block";
+        document.getElementById("finalPhotoPreview").src = capturedPhoto.src;
     }
 
     // Masquer le modal PayPal
     function hidePaypalDiv() {
         document.getElementById("paypal_div").style.display = "none";
-
-        // Si l'utilisateur a fait son choix, on affiche les bonnes options
-        if (userChoice === "camera") {
-            initialOptions.style.display = "none";
-            options.style.display = "block";
-            openCameraBtn.style.display = "inline-block";
-            captureBtn.style.display = "inline-block";
-        } else if (userChoice === "upload") {
-            initialOptions.style.display = "none";
-            options.style.display = "block";
-            fileInput.click();
-        }
     }
+
+    // Fonction pour supprimer le fond
+    const autoRemoveBackground = async (uri) => {
+        try {
+            Swal.fire({
+                title: 'Traitement en cours',
+                html: 'Suppression du fond de votre image...',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
+            // Conversion de l'URI en Blob
+            const response = await fetch(uri);
+            const blob = await response.blob();
+
+            const formData = new FormData();
+            formData.append('image_file', blob, 'image.jpg');
+            formData.append('size', 'auto');
+
+            const bgRemoveResponse = await fetch('https://api.remove.bg/v1.0/removebg', {
+                method: 'POST',
+                headers: {
+                    'X-Api-Key': 'nU5diUi4yggUn2UGkFTNbRYC',
+                },
+                body: formData,
+            });
+
+            if (!bgRemoveResponse.ok) {
+                const errorText = await bgRemoveResponse.text();
+                console.error('Remove.bg error:', errorText);
+                throw new Error('Échec de la suppression du fond.');
+            }
+
+            const blobResponse = await bgRemoveResponse.blob();
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                removedBgImageUri = reader.result;
+                showBackgroundSelectionModal(reader.result);
+            };
+            reader.readAsDataURL(blobResponse);
+        } catch (error) {
+            console.error('Error:', error);
+            Swal.fire('Erreur', 'Échec de la suppression du fond. Veuillez réessayer.', 'error');
+            // Continuer avec l'image originale
+            capturedPhoto.src = uri;
+            photoDataInput.value = uri;
+            photoUploaded = true;
+            photoLockOverlay.style.display = "block";
+            photoStatus.style.display = "block";
+            payNowBtn.style.display = "inline-block";
+        }
+    };
+
+    // Afficher la modal de sélection de fond
+    function showBackgroundSelectionModal(imageUri) {
+        Swal.close();
+        document.getElementById('processedPhoto').src = imageUri;
+        const modal = new bootstrap.Modal(document.getElementById('backgroundSelectionModal'));
+        modal.show();
+    }
+
+    // Gestionnaire d'événement pour la sélection de fond
+    document.addEventListener('click', function(e) {
+        if (e.target.classList.contains('bg-option') || e.target.closest('[data-bg]')) {
+            // Retirer la classe selected de toutes les options
+            document.querySelectorAll('.bg-option').forEach(option => {
+                option.classList.remove('selected');
+            });
+            
+            // Ajouter la classe selected à l'option cliquée
+            const target = e.target.classList.contains('bg-option') ? e.target : e.target.closest('[data-bg]');
+            target.classList.add('selected');
+            
+            // Mettre à jour la sélection de fond
+            const bgId = target.getAttribute('data-bg');
+            selectedBackground = bgId === 'none' ? null : backgrounds.find(bg => bg.id === bgId);
+        }
+    });
+
+    // Confirmation du fond sélectionné
+// Confirmation du fond sélectionné
+document.getElementById('confirmBackgroundBtn').addEventListener('click', async function() {
+    const modal = bootstrap.Modal.getInstance(document.getElementById('backgroundSelectionModal'));
+    modal.hide();
+    
+    Swal.fire({
+        title: 'Traitement en cours',
+        html: 'Application de l\'arrière-plan...',
+        allowOutsideClick: false,
+        didOpen: () => {
+            Swal.showLoading();
+        }
+    });
+
+    try {
+        let finalImageUri;
+        
+        if (!selectedBackground) {
+            finalImageUri = removedBgImageUri;
+        } else {
+            // Utilisez maintenant la nouvelle fonction de fusion
+            finalImageUri = await mergeImageWithBackground(removedBgImageUri, selectedBackground.image);
+            
+            // Créez une nouvelle image pour vérifier le résultat
+            const testImg = new Image();
+            testImg.src = finalImageUri;
+            testImg.onload = function() {
+                console.log("Taille de l'image fusionnée:", testImg.width, "x", testImg.height);
+            };
+        }
+        
+        capturedPhoto.src = finalImageUri;
+        photoDataInput.value = finalImageUri;
+        
+        photoUploaded = true;
+        photoLockOverlay.style.display = "block";
+        photoStatus.style.display = "block";
+        payNowBtn.style.display = "inline-block";
+        removeBgBtn.style.display = "none";
+        
+        Swal.close();
+    } catch (error) {
+        console.error("Error:", error);
+        Swal.fire('Erreur', 'Impossible d\'appliquer l\'arrière-plan', 'error');
+        capturedPhoto.src = removedBgImageUri;
+        photoDataInput.value = removedBgImageUri;
+    }
+});
+
+// Fonction pour fusionner l'image sans fond avec un arrière-plan
+async function mergeImageWithBackground(foregroundUri, backgroundImageUrl) {
+    return new Promise((resolve, reject) => {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Charger l'image de fond
+        const bgImg = new Image();
+        bgImg.crossOrigin = 'Anonymous';
+        bgImg.src = backgroundImageUrl;
+        
+        bgImg.onload = function() {
+            // Définir la taille du canvas comme la taille de l'image de fond
+            canvas.width = bgImg.width;
+            canvas.height = bgImg.height;
+            
+            // Dessiner l'arrière-plan (fixe)
+            ctx.drawImage(bgImg, 0, 0, canvas.width, canvas.height);
+            
+            // Charger l'image avant-plan (sans fond)
+            const fgImg = new Image();
+            fgImg.crossOrigin = 'Anonymous';
+            fgImg.src = foregroundUri;
+            
+            fgImg.onload = function() {
+                // Calculer la position pour centrer l'image avant-plan
+                // tout en conservant le fond fixe
+                const scale = Math.min(
+                    canvas.width / fgImg.width,
+                    canvas.height / fgImg.height
+                );
+                const width = fgImg.width * scale;
+                const height = fgImg.height * scale;
+                const x = (canvas.width - width) / 2;
+                const y = (canvas.height - height) / 2;
+                
+                // Dessiner l'image avant-plan (redimensionnée pour s'adapter au fond)
+                ctx.drawImage(fgImg, x, y, width, height);
+                
+                // Récupérer l'URI de l'image fusionnée
+                resolve(canvas.toDataURL('image/png'));
+            };
+            
+            fgImg.onerror = reject;
+        };
+        
+        bgImg.onerror = reject;
+    });
+}
 
     // Gérer le choix de l'utilisateur - Caméra
     document.getElementById("chooseCamera").addEventListener("click", () => {
@@ -411,7 +755,6 @@
 
     // Gérer le choix de l'utilisateur - Upload
     document.getElementById("chooseUpload").addEventListener("click", () => {
-
         var email = document.getElementById("email").value;
         var fname = document.getElementById("fname").value;
         var lname = document.getElementById("lname").value;
@@ -442,33 +785,115 @@
 
     // Intégration PayPal
     paypal.Buttons({
-    createOrder: (data, actions) =>
-        actions.order.create({
-            purchase_units: [{
-                amount: {
-                    value: "{{ env('PAYPAL_AMOUNT') }}",  // Vous pouvez le changer dynamiquement
-                },
-            }, ],
-        }),
-    onApprove: (data, actions) =>
-        actions.order.capture().then((details) => {
-            alert(`Transaction completed by ${details.payer.name.given_name}`);
+        createOrder: (data, actions) => {
+            // Validation des champs avant paiement
+            const email = document.getElementById("email").value;
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                Swal.fire({
+                    icon: "error",
+                    title: "Email invalide",
+                    text: "Veuillez entrer une adresse email valide"
+                });
+                return false;
+            }
 
-            // Changer le mode de paiement et le montant dans le formulaire
-            document.getElementById("mode_paiement").value = "en ligne"; // Mettre "paypal"
-            document.getElementById("montant").value = "{{ env('PAYPAL_AMOUNT') }}"; // Mettre le montant payé
+            return actions.order.create({
+                purchase_units: [{
+                    amount: {
+                        value: "{{ env('PAYPAL_AMOUNT') }}",
+                    },
+                }],
+            });
+        },
+        onApprove: (data, actions) => {
+            return actions.order.capture().then((details) => {
+                // 1. Masquer le formulaire
+                hidePaypalDiv();
+                document.getElementById("photoForm").style.display = "none";
+                
+                // 2. Afficher la section de succès
+                document.getElementById("paymentSuccessSection").style.display = "block";
+                document.getElementById("displayPhoto").src = capturedPhoto.src;
+                // 3. Remplir les informations dans la section de succès
+                document.getElementById("displayFname").textContent = document.getElementById("fname").value;
+                document.getElementById("displayLname").textContent = document.getElementById("lname").value;
+                document.getElementById("displayEmail").textContent = document.getElementById("email").value;
+                document.getElementById("displayAdress").textContent = document.getElementById("adress").value;
+                
+                // 4. Activer le bouton de téléchargement final
+                document.getElementById("finalDownloadBtn").addEventListener("click", function() {
+                    const link = document.createElement("a");
+                    link.href = capturedPhoto.src;
+                    link.download = "photo-professionnelle.png";
+                    link.click();
+                });
 
-            // Soumettre le formulaire pour l'enregistrement en base de données
-            document.querySelector('form').submit();
-        }),
-    onError: (err) => console.error("Transaction error:", err),
-    
-}).render("#paypal-button-container");
+                // 5. Enregistrement en base de données (AJAX)
+                const formData = new FormData();
+                formData.append('fname', document.getElementById("fname").value);
+                formData.append('lname', document.getElementById("lname").value);
+                formData.append('email', document.getElementById("email").value);
+                formData.append('adress', document.getElementById("adress").value);
+                formData.append('img', capturedPhoto.src);
+                formData.append('mode_paiement', 'en ligne');
+                formData.append('montant', "{{ env('PAYPAL_AMOUNT') }}");
+                formData.append('_token', document.querySelector('meta[name="csrf-token"]').content);
 
+                fetch("{{ route('save.payment') }}", {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (!data.success) {
+                        console.error("Erreur lors de l'enregistrement:", data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error("Erreur:", error);
+                });
+            });
+        },
+        onError: (err) => {
+            console.error("Transaction error:", err);
+            Swal.fire({
+                icon: "error",
+                title: "Erreur de paiement",
+                text: "Une erreur est survenue lors du paiement. Veuillez réessayer."
+            });
+        },
+    }).render("#paypal-button-container");
+
+    function hidePaypalDiv() {
+    document.getElementById("paypal_div").style.display = "none";
+}
+
+    // Afficher la section de confirmation après paiement
+    function showConfirmationSection() {
+        // Remplir les informations de confirmation
+        document.getElementById("confirmationFname").textContent = document.getElementById("fname").value;
+        document.getElementById("confirmationLname").textContent = document.getElementById("lname").value;
+        document.getElementById("confirmationEmail").textContent = document.getElementById("email").value;
+        document.getElementById("confirmationAdress").textContent = document.getElementById("adress").value;
+        
+        // Masquer le formulaire et afficher la confirmation
+        document.getElementById("photoForm").style.display = "none";
+        document.getElementById("confirmationSection").style.display = "block";
+        
+        // Activer le bouton de téléchargement final
+        document.getElementById("finalDownloadBtn").addEventListener("click", function() {
+            if (capturedPhoto.src) {
+                const link = document.createElement("a");
+                link.href = capturedPhoto.src;
+                link.download = "photo-professionnelle.png";
+                link.click();
+            }
+        });
+    }
 
     // Gérer la caméra
     document.getElementById("openCameraBtn").addEventListener("click", () => {
-
         var email = document.getElementById("email").value;
         var fname = document.getElementById("fname").value;
         var lname = document.getElementById("lname").value;
@@ -491,8 +916,6 @@
             return;
         }
 
-
-
         cameraPrev = true;
         document.getElementById("cameraPreview").style.display = "block";
         navigator.mediaDevices.getUserMedia({
@@ -509,7 +932,6 @@
 
     // Capture d'une photo avec la caméra
     captureBtn.addEventListener("click", () => {
-
         var email = document.getElementById("email").value;
         var fname = document.getElementById("fname").value;
         var lname = document.getElementById("lname").value;
@@ -538,17 +960,15 @@
         context.drawImage(video, 0, 0, canvas.width, canvas.height);
         const photoDataUrl = canvas.toDataURL("image/png");
 
+        // Afficher la photo capturée
         capturedPhoto.src = photoDataUrl;
         capturedPhoto.style.display = "block";
         photoDataInput.value = photoDataUrl;
-
-        // Afficher l'overlay de verrouillage et le message d'état
-        photoUploaded = true;
-        photoLockOverlay.style.display = "block";
-        photoStatus.style.display = "block";
-
         
-
+        // Afficher les options après capture
+        removeBgBtn.style.display = "inline-block";
+        payNowBtn.style.display = "inline-block";
+        
         // Fermer la caméra
         if (stream) {
             const tracks = stream.getTracks();
@@ -556,19 +976,22 @@
             video.srcObject = null;
             video.style.display = "none";
         }
-
-        // Proposer le paiement
-        showPaypalDiv();
     });
 
-    // Téléchargement de la photo (activé seulement après paiement)
-    downloadBtn.addEventListener("click", () => {
-        if (capturedPhoto.src) {
-            const link = document.createElement("a");
-            link.href = capturedPhoto.src;
-            link.download = "photo-professionnelle.png";
-            link.click();
-        }
+    // Bouton pour supprimer le fond
+    removeBgBtn.addEventListener("click", () => {
+        autoRemoveBackground(capturedPhoto.src);
+    });
+
+    // Bouton pour payer directement (sans suppression de fond)
+    payNowBtn.addEventListener("click", () => {
+        // Afficher l'overlay de verrouillage et le message d'état
+        photoUploaded = true;
+        photoLockOverlay.style.display = "block";
+        photoStatus.style.display = "block";
+        
+        // Proposer le paiement
+        showPaypalDiv();
     });
 
     // Gestion de l'upload de fichier
@@ -577,22 +1000,18 @@
         if (file) {
             const reader = new FileReader();
             reader.onload = (e) => {
+                // Afficher l'image téléchargée
                 capturedPhoto.src = e.target.result;
                 capturedPhoto.style.display = "block";
                 photoDataInput.value = e.target.result;
-
-                // Afficher l'overlay de verrouillage et le message d'état
-                photoUploaded = true;
-                photoLockOverlay.style.display = "block";
-                photoStatus.style.display = "block";
-
-                // Proposer le paiement
-                showPaypalDiv();
+                
+                // Afficher les options après upload
+                removeBgBtn.style.display = "inline-block";
+                payNowBtn.style.display = "inline-block";
             };
             reader.readAsDataURL(file);
         }
     });
     </script>
 </body>
-
 </html>
