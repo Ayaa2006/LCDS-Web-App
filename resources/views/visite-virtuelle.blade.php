@@ -127,20 +127,27 @@
         font-size: 2rem;
     }
 
-    /* Styles pour la modal de sélection de fond */
-    #backgroundSelectionModal .bg-option {
-        transition: all 0.3s ease;
+    /* Styles pour la sélection de fond */
+    .bg-option {
+        transition: all 0.2s ease;
         border: 2px solid transparent;
     }
 
-    #backgroundSelectionModal .bg-option:hover {
+    .bg-option:hover {
         transform: scale(1.05);
         border-color: #0d6efd;
     }
 
-    #backgroundSelectionModal .bg-option.selected {
+    .bg-option.selected {
         border-color: #0d6efd;
         box-shadow: 0 0 10px rgba(13, 110, 253, 0.5);
+    }
+
+    #backgroundOptionsContainer {
+        background: #f8f9fa;
+        padding: 15px;
+        border-radius: 8px;
+        margin-top: 15px;
     }
 
     #processedPhoto {
@@ -175,16 +182,47 @@
         }
     }
     #displayPhoto {
-    max-width: 100%;
-    height: auto;
-    border-radius: 8px;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-    margin-bottom: 20px;
-    transition: transform 0.3s ease;
+        max-width: 100%;
+        height: auto;
+        border-radius: 8px;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        margin-bottom: 20px;
+        transition: transform 0.3s ease;
+    }
+
+    #displayPhoto:hover {
+        transform: scale(1.02);
+    }
+ 
+/* Loading screen styles */
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.8);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    color: white;
 }
 
-#displayPhoto:hover {
-    transform: scale(1.02);
+.loading-spinner {
+    border: 5px solid #f3f3f3;
+    border-top: 5px solid #3498db;
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    animation: spin 2s linear infinite;
+    margin-bottom: 15px;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
 }
     </style>
 </head>
@@ -192,7 +230,11 @@
 <body>
     <!-- Navbar -->
     @include('navbar')
-
+<!-- Loading Overlay -->
+<div id="loadingOverlay" class="loading-overlay" style="display: none;">
+    <div class="loading-spinner"></div>
+    <p>Traitement de votre image en cours...</p>
+</div>
     <header class="bg-dark text-white text-center py-5"
         style="background-image: url(assets_casa_de_selfie/360_F_512933916_Wzr2Jw0EQYuWDDOJI9mT5buG7LEGpAeM.jpg);background-repeat: no-repeat; background-position: right;height: 360px; background-size: cover;">
         <div class="container" style="margin: auto; padding: auto; margin-top: 100px;">
@@ -287,64 +329,6 @@
         </div>
     </div>
 
-    <!-- Modal de sélection de fond -->
-    <div id="backgroundSelectionModal" class="modal fade" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Personnalisez votre photo</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <h6>Votre photo sans fond</h6>
-                                <img id="processedPhoto" src="" class="img-fluid rounded" style="max-height: 300px;">
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <h6>Choisissez un arrière-plan</h6>
-                                <div class="row" id="backgroundOptions">
-                                    <div class="col-4 mb-2">
-                                        <img src="{{ asset('assets_casa_de_selfie/white.jpg') }}" 
-                                             class="img-thumbnail bg-option" 
-                                             data-bg="white" 
-                                             style="cursor: pointer; height: 80px;">
-                                    </div>
-                                    <div class="col-4 mb-2">
-                                        <img src="{{ asset('assets_casa_de_selfie/black.jpg') }}" 
-                                             class="img-thumbnail bg-option" 
-                                             data-bg="black" 
-                                             style="cursor: pointer; height: 80px;">
-                                    </div>
-                                    <div class="col-4 mb-2">
-                                        <img src="{{ asset('assets_casa_de_selfie/bg7.jpg') }}" 
-                                             class="img-thumbnail bg-option" 
-                                             data-bg="bg7" 
-                                             style="cursor: pointer; height: 80px;">
-                                    </div>
-                                    <div class="col-4 mb-2">
-                                        <button class="btn btn-outline-secondary w-100 h-100 d-flex flex-column align-items-center justify-content-center"
-                                                data-bg="none">
-                                            <i class="fas fa-times mb-2"></i>
-                                            <span>Aucun fond</span>
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
-                    <button type="button" id="confirmBackgroundBtn" class="btn btn-primary">Confirmer et procéder au paiement</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <!-- Photo Submission Form - Modifié -->
     <section>
         <div class="container mt-5">
@@ -369,10 +353,10 @@
                             </div>
                         </div>
                         <div class="row mb-3 justify-content-center">
-        <div class="col-md-6 text-center">
-            <img id="displayPhoto" src="" class="img-fluid rounded" style="max-height: 300px; border: 2px solid #ddd;">
-        </div>
-    </div>
+                            <div class="col-md-6 text-center">
+                                <img id="displayPhoto" src="" class="img-fluid rounded" style="max-height: 300px; border: 2px solid #ddd;">
+                            </div>
+                        </div>
                         <div class="text-center mt-4">
                             <button id="finalDownloadBtn" class="btn btn-success">
                                 <i class="fas fa-download me-1"></i>Télécharger ma photo
@@ -409,7 +393,11 @@
                                 <input type="hidden" id="montant" name="montant" value="">
                             </div>
                         </div>
-
+<!-- Loading Overlay -->
+<div id="loadingOverlay" class="loading-overlay" style="display: none;">
+    <div class="loading-spinner"></div>
+    <p>Traitement de votre image en cours...</p>
+</div>
                         <!-- Section de la photo -->
                         <div class="col-md-12 mt-3">
                             <label for="capturedPhoto" class="form-label">Votre Photo</label>
@@ -417,6 +405,14 @@
                                 <img id="capturedPhoto" class="img-fluid" />
                                 <div class="lock-overlay" id="photoLockOverlay" style="display: none;">
                                     <i class="fas fa-lock fa-3x"></i>
+                                </div>
+                            </div>
+                            
+                            <!-- Conteneur pour les options de fond -->
+                            <div id="backgroundOptionsContainer" class="mt-3" style="display: none;">
+                                <h6>Choisissez un arrière-plan :</h6>
+                                <div class="row" id="backgroundOptions">
+                                    <!-- Les options seront ajoutées dynamiquement en JS -->
                                 </div>
                             </div>
                             
@@ -446,13 +442,9 @@
                             <button type="button" id="captureBtn" class="btn btn-success" style="display:none;">
                                 <i class="fas fa-camera-retro me-1"></i>Capturer la photo
                             </button> <br><br>
-                            <button type="button" id="removeBgBtn" class="btn btn-warning" style="display:none;">
-                                <i class="fas fa-magic me-1"></i>Supprimer le fond
-                            </button>
                             <button type="button" id="payNowBtn" class="btn btn-primary" style="display:none;">
                                 <i class="fas fa-credit-card me-1"></i>Payer maintenant
                             </button>
-                           
                         </div>
 
                         <!-- Prévisualisation caméra -->
@@ -513,23 +505,15 @@
     const canvas = document.getElementById("photoCanvas");
     const capturedPhoto = document.getElementById("capturedPhoto");
     const photoDataInput = document.getElementById("img");
-    const downloadBtn = document.getElementById("downloadBtn");
-    const removeBgBtn = document.getElementById("removeBgBtn");
+    const backgroundOptionsContainer = document.getElementById("backgroundOptionsContainer");
     const payNowBtn = document.getElementById("payNowBtn");
-    const fileInput = document.getElementById("fileInput");
-    const initialOptions = document.getElementById("initialOptions");
-    const options = document.getElementById("options");
-    const captureBtn = document.getElementById("captureBtn");
-    const openCameraBtn = document.getElementById("openCameraBtn");
-    const chooseUpload = document.getElementById("chooseUpload");
-    let stream;
-    let removedBgImageUri = null;
-    let selectedBackground = null;
     const backgrounds = [
-        { id: 'white', name: 'Fond blanc', image: '{{ asset("assets_casa_de_selfie/white.jpg") }}' },
-        { id: 'black', name: 'Fond noir', image: '{{ asset("assets_casa_de_selfie/black.jpg") }}' },
-        { id: 'bg7', name: 'Fond orange', image: '{{ asset("assets_casa_de_selfie/bg7.jpg") }}' }
-    ];
+    { id: 'bg7', name: 'Fond orange', image: '{{ asset("assets_casa_de_selfie/bg7.jpg") }}' },
+    { id: 'white', name: 'Fond blanc', image: '{{ asset("assets_casa_de_selfie/white.jpg") }}' },
+    { id: 'gris', name: 'Fond gris', image: '{{ asset("assets_casa_de_selfie/gris.jpg") }}' },
+    { id: 'black', name: 'Fond noir', image: '{{ asset("assets_casa_de_selfie/black.jpg") }}' },
+];
+    let currentImageWithoutBg = null;
 
     // Afficher le modal PayPal
     function showPaypalDiv() {
@@ -542,184 +526,230 @@
         document.getElementById("paypal_div").style.display = "none";
     }
 
-    // Fonction pour supprimer le fond
-    const autoRemoveBackground = async (uri) => {
-        try {
-            Swal.fire({
-                title: 'Traitement en cours',
-                html: 'Suppression du fond de votre image...',
-                allowOutsideClick: false,
-                didOpen: () => {
-                    Swal.showLoading();
-                }
-            });
-
-            // Conversion de l'URI en Blob
-            const response = await fetch(uri);
-            const blob = await response.blob();
-
-            const formData = new FormData();
-            formData.append('image_file', blob, 'image.jpg');
-            formData.append('size', 'auto');
-
-            const bgRemoveResponse = await fetch('https://api.remove.bg/v1.0/removebg', {
-                method: 'POST',
-                headers: {
-                    'X-Api-Key': 'nU5diUi4yggUn2UGkFTNbRYC',
-                },
-                body: formData,
-            });
-
-            if (!bgRemoveResponse.ok) {
-                const errorText = await bgRemoveResponse.text();
-                console.error('Remove.bg error:', errorText);
-                throw new Error('Échec de la suppression du fond.');
-            }
-
-            const blobResponse = await bgRemoveResponse.blob();
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                removedBgImageUri = reader.result;
-                showBackgroundSelectionModal(reader.result);
-            };
-            reader.readAsDataURL(blobResponse);
-        } catch (error) {
-            console.error('Error:', error);
-            Swal.fire('Erreur', 'Échec de la suppression du fond. Veuillez réessayer.', 'error');
-            // Continuer avec l'image originale
-            capturedPhoto.src = uri;
-            photoDataInput.value = uri;
-            photoUploaded = true;
-            photoLockOverlay.style.display = "block";
-            photoStatus.style.display = "block";
-            payNowBtn.style.display = "inline-block";
-        }
-    };
-
-    // Afficher la modal de sélection de fond
-    function showBackgroundSelectionModal(imageUri) {
-        Swal.close();
-        document.getElementById('processedPhoto').src = imageUri;
-        const modal = new bootstrap.Modal(document.getElementById('backgroundSelectionModal'));
-        modal.show();
-    }
-
-    // Gestionnaire d'événement pour la sélection de fond
-    document.addEventListener('click', function(e) {
-        if (e.target.classList.contains('bg-option') || e.target.closest('[data-bg]')) {
-            // Retirer la classe selected de toutes les options
-            document.querySelectorAll('.bg-option').forEach(option => {
-                option.classList.remove('selected');
-            });
-            
-            // Ajouter la classe selected à l'option cliquée
-            const target = e.target.classList.contains('bg-option') ? e.target : e.target.closest('[data-bg]');
-            target.classList.add('selected');
-            
-            // Mettre à jour la sélection de fond
-            const bgId = target.getAttribute('data-bg');
-            selectedBackground = bgId === 'none' ? null : backgrounds.find(bg => bg.id === bgId);
-        }
-    });
-
-    // Confirmation du fond sélectionné
-// Confirmation du fond sélectionné
-document.getElementById('confirmBackgroundBtn').addEventListener('click', async function() {
-    const modal = bootstrap.Modal.getInstance(document.getElementById('backgroundSelectionModal'));
-    modal.hide();
-    
-    Swal.fire({
-        title: 'Traitement en cours',
-        html: 'Application de l\'arrière-plan...',
-        allowOutsideClick: false,
-        didOpen: () => {
-            Swal.showLoading();
-        }
-    });
-
+    // Fonction pour supprimer automatiquement le fond
+    const autoRemoveBackground = async (imageUri) => {
     try {
-        let finalImageUri;
+        // Afficher le loading screen
+        showLoadingOverlay();
         
-        if (!selectedBackground) {
-            finalImageUri = removedBgImageUri;
-        } else {
-            // Utilisez maintenant la nouvelle fonction de fusion
-            finalImageUri = await mergeImageWithBackground(removedBgImageUri, selectedBackground.image);
+        capturedPhoto.style.opacity = '0.5';
+        
+        const response = await fetch(imageUri);
+        const blob = await response.blob();
+
+        const formData = new FormData();
+        formData.append('image_file', blob, 'image.jpg');
+        formData.append('size', 'auto');
+
+        const bgRemoveResponse = await fetch('https://api.remove.bg/v1.0/removebg', {
+            method: 'POST',
+            headers: {
+                'X-Api-Key': 'nU5diUi4yggUn2UGkFTNbRYC',
+            },
+            body: formData,
+        });
+
+        if (!bgRemoveResponse.ok) {
+            hideLoadingOverlay();
+            throw new Error('Échec de la suppression du fond.');
+        }
+
+        const blobResponse = await bgRemoveResponse.blob();
+        const reader = new FileReader();
+        reader.onloadend = () => {
+            currentImageWithoutBg = reader.result;
+            capturedPhoto.src = reader.result;
+            capturedPhoto.style.opacity = '1';
+            photoDataInput.value = reader.result;
             
-            // Créez une nouvelle image pour vérifier le résultat
-            const testImg = new Image();
-            testImg.src = finalImageUri;
-            testImg.onload = function() {
-                console.log("Taille de l'image fusionnée:", testImg.width, "x", testImg.height);
-            };
+            // Afficher les options de fond
+            showBackgroundOptions(reader.result);
+            
+            payNowBtn.style.display = "inline-block";
+            
+            // Masquer le loading screen
+            hideLoadingOverlay();
+            
+            // Afficher un message de succès
+            Swal.fire({
+                icon: 'success',
+                title: 'Fond supprimé avec succès!',
+                text: 'Vous pouvez maintenant choisir un arrière-plan',
+                timer: 2000
+            });
+        };
+        reader.readAsDataURL(blobResponse);
+    } catch (error) {
+        console.error('Error:', error);
+        capturedPhoto.src = imageUri;
+        capturedPhoto.style.opacity = '1';
+        photoDataInput.value = imageUri;
+        currentImageWithoutBg = imageUri;
+        showBackgroundOptions(imageUri);
+        payNowBtn.style.display = "inline-block";
+        
+        // Masquer le loading screen
+        hideLoadingOverlay();
+        
+        // Afficher un message d'erreur
+        Swal.fire({
+            icon: 'error',
+            title: 'Erreur de traitement',
+            text: "Nous n'avons pas pu supprimer automatiquement le fond. Vous pouvez toujours choisir un arrière-plan manuellement.",
+            timer: 3000
+        });
+    }
+};
+
+// Fonctions pour gérer le loading screen
+function showLoadingOverlay() {
+    document.getElementById('loadingOverlay').style.display = 'flex';
+    // Désactiver le contenu de la page
+    document.querySelectorAll('button, input, select').forEach(element => {
+        element.disabled = true;
+    });
+}
+
+function hideLoadingOverlay() {
+    document.getElementById('loadingOverlay').style.display = 'none';
+    // Réactiver le contenu de la page
+    document.querySelectorAll('button, input, select').forEach(element => {
+        element.disabled = false;
+    });
+}
+
+    // Afficher les options de fond sous l'image principale
+    function showBackgroundOptions(imageWithoutBg) {
+    backgroundOptionsContainer.style.display = 'block';
+    const bgOptionsContainer = document.getElementById('backgroundOptions');
+    bgOptionsContainer.innerHTML = '';
+    
+    backgrounds.forEach((bg, index) => {
+        const bgElement = document.createElement('div');
+        bgElement.className = 'col-3 mb-2';
+        
+        if (bg.id === 'none') {
+            bgElement.innerHTML = `
+                <button class="btn btn-outline-secondary w-100 h-100 d-flex flex-column align-items-center justify-content-center bg-option" 
+                        data-bg="none" style="height: 80px;">
+                    <i class="fas fa-times mb-1"></i>
+                    <small>Aucun</small>
+                </button>
+            `;
+        } else {
+            // Ajouter la classe 'selected' au premier élément (orange)
+            const selectedClass = index === 0 ? 'selected' : '';
+            bgElement.innerHTML = `
+                <img src="${bg.image}" 
+                     class="img-thumbnail bg-option ${selectedClass}" 
+                     data-bg="${bg.id}"
+                     style="cursor: pointer; height: 80px; object-fit: cover;"
+                     title="${bg.name}">
+            `;
         }
         
-        capturedPhoto.src = finalImageUri;
-        photoDataInput.value = finalImageUri;
-        
-        photoUploaded = true;
-        photoLockOverlay.style.display = "block";
-        photoStatus.style.display = "block";
-        payNowBtn.style.display = "inline-block";
-        removeBgBtn.style.display = "none";
-        
-        Swal.close();
-    } catch (error) {
-        console.error("Error:", error);
-        Swal.fire('Erreur', 'Impossible d\'appliquer l\'arrière-plan', 'error');
-        capturedPhoto.src = removedBgImageUri;
-        photoDataInput.value = removedBgImageUri;
+        bgOptionsContainer.appendChild(bgElement);
+    });
+    
+    // Appliquer automatiquement le premier fond (orange)
+    if (backgrounds.length > 0) {
+        applyBackground(imageWithoutBg, backgrounds[0].id);
     }
-});
+    
+    // Activer le clic sur les options de fond
+    document.querySelectorAll('.bg-option').forEach(option => {
+        option.addEventListener('click', () => {
+            applyBackground(imageWithoutBg, option.dataset.bg);
+        });
+    });
+}
 
-// Fonction pour fusionner l'image sans fond avec un arrière-plan
-async function mergeImageWithBackground(foregroundUri, backgroundImageUrl) {
-    return new Promise((resolve, reject) => {
+    // Appliquer le fond sélectionné
+    async function applyBackground(originalImage, bgId) {
+    try {
+        // Afficher le loading screen
+        showLoadingOverlay();
+        
+        // Retirer la sélection précédente
+        document.querySelectorAll('.bg-option').forEach(opt => {
+            opt.classList.remove('selected');
+        });
+        
+        // Ajouter la sélection à l'option cliquée
+        const clickedOption = [...document.querySelectorAll('.bg-option')]
+            .find(opt => opt.dataset.bg === bgId);
+        if (clickedOption) {
+            clickedOption.classList.add('selected');
+        }
+        
+        if (bgId === 'none') {
+            capturedPhoto.src = originalImage;
+            photoDataInput.value = originalImage;
+            hideLoadingOverlay();
+            return;
+        }
+        
+        const bg = backgrounds.find(b => b.id === bgId);
+        if (!bg) {
+            hideLoadingOverlay();
+            return;
+        }
+        
+        // Créer un canvas pour fusionner les images
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
         
-        // Charger l'image de fond
-        const bgImg = new Image();
-        bgImg.crossOrigin = 'Anonymous';
-        bgImg.src = backgroundImageUrl;
+        // Charger l'image sans fond
+        const fgImg = new Image();
+        fgImg.src = originalImage;
         
-        bgImg.onload = function() {
-            // Définir la taille du canvas comme la taille de l'image de fond
-            canvas.width = bgImg.width;
-            canvas.height = bgImg.height;
+        await new Promise(resolve => {
+            fgImg.onload = resolve;
+        });
+        
+        // Définir la taille du canvas
+        canvas.width = fgImg.width;
+        canvas.height = fgImg.height;
+        
+        // Si fond uni
+        if (bgId === 'white' || bgId === 'black') {
+            ctx.fillStyle = bgId === 'white' ? '#ffffff' : '#000000';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.drawImage(fgImg, 0, 0);
+        } 
+        // Si fond image
+        else {
+            const bgImg = new Image();
+            bgImg.src = bg.image;
             
-            // Dessiner l'arrière-plan (fixe)
+            await new Promise(resolve => {
+                bgImg.onload = resolve;
+            });
+            
+            // Dessiner le fond redimensionné
             ctx.drawImage(bgImg, 0, 0, canvas.width, canvas.height);
-            
-            // Charger l'image avant-plan (sans fond)
-            const fgImg = new Image();
-            fgImg.crossOrigin = 'Anonymous';
-            fgImg.src = foregroundUri;
-            
-            fgImg.onload = function() {
-                // Calculer la position pour centrer l'image avant-plan
-                // tout en conservant le fond fixe
-                const scale = Math.min(
-                    canvas.width / fgImg.width,
-                    canvas.height / fgImg.height
-                );
-                const width = fgImg.width * scale;
-                const height = fgImg.height * scale;
-                const x = (canvas.width - width) / 2;
-                const y = (canvas.height - height) / 2;
-                
-                // Dessiner l'image avant-plan (redimensionnée pour s'adapter au fond)
-                ctx.drawImage(fgImg, x, y, width, height);
-                
-                // Récupérer l'URI de l'image fusionnée
-                resolve(canvas.toDataURL('image/png'));
-            };
-            
-            fgImg.onerror = reject;
-        };
+            // Dessiner l'image sans fond par-dessus
+            ctx.drawImage(fgImg, 0, 0);
+        }
         
-        bgImg.onerror = reject;
-    });
+        // Mettre à jour l'image affichée
+        capturedPhoto.src = canvas.toDataURL('image/png');
+        photoDataInput.value = canvas.toDataURL('image/png');
+        
+        // Masquer le loading screen
+        hideLoadingOverlay();
+        
+    } catch (error) {
+        console.error("Erreur lors de l'application du fond:", error);
+        // Masquer le loading screen en cas d'erreur
+        hideLoadingOverlay();
+        Swal.fire({
+            icon: 'error',
+            title: 'Erreur',
+            text: "Une erreur est survenue lors de l'application du fond",
+            timer: 2000
+        });
+    }
 }
 
     // Gérer le choix de l'utilisateur - Caméra
@@ -749,8 +779,8 @@ async function mergeImageWithBackground(foregroundUri, backgroundImageUrl) {
         userChoice = "camera";
         initialOptions.style.display = "none";
         options.style.display = "block";
-        openCameraBtn.style.display = "inline-block";
-        captureBtn.style.display = "inline-block";
+        document.getElementById("openCameraBtn").style.display = "inline-block";
+        document.getElementById("captureBtn").style.display = "inline-block";
     });
 
     // Gérer le choix de l'utilisateur - Upload
@@ -780,7 +810,7 @@ async function mergeImageWithBackground(foregroundUri, backgroundImageUrl) {
         userChoice = "upload";
         initialOptions.style.display = "none";
         options.style.display = "block";
-        fileInput.click();
+        document.getElementById("fileInput").click();
     });
 
     // Intégration PayPal
@@ -815,6 +845,7 @@ async function mergeImageWithBackground(foregroundUri, backgroundImageUrl) {
                 // 2. Afficher la section de succès
                 document.getElementById("paymentSuccessSection").style.display = "block";
                 document.getElementById("displayPhoto").src = capturedPhoto.src;
+                
                 // 3. Remplir les informations dans la section de succès
                 document.getElementById("displayFname").textContent = document.getElementById("fname").value;
                 document.getElementById("displayLname").textContent = document.getElementById("lname").value;
@@ -865,33 +896,6 @@ async function mergeImageWithBackground(foregroundUri, backgroundImageUrl) {
         },
     }).render("#paypal-button-container");
 
-    function hidePaypalDiv() {
-    document.getElementById("paypal_div").style.display = "none";
-}
-
-    // Afficher la section de confirmation après paiement
-    function showConfirmationSection() {
-        // Remplir les informations de confirmation
-        document.getElementById("confirmationFname").textContent = document.getElementById("fname").value;
-        document.getElementById("confirmationLname").textContent = document.getElementById("lname").value;
-        document.getElementById("confirmationEmail").textContent = document.getElementById("email").value;
-        document.getElementById("confirmationAdress").textContent = document.getElementById("adress").value;
-        
-        // Masquer le formulaire et afficher la confirmation
-        document.getElementById("photoForm").style.display = "none";
-        document.getElementById("confirmationSection").style.display = "block";
-        
-        // Activer le bouton de téléchargement final
-        document.getElementById("finalDownloadBtn").addEventListener("click", function() {
-            if (capturedPhoto.src) {
-                const link = document.createElement("a");
-                link.href = capturedPhoto.src;
-                link.download = "photo-professionnelle.png";
-                link.click();
-            }
-        });
-    }
-
     // Gérer la caméra
     document.getElementById("openCameraBtn").addEventListener("click", () => {
         var email = document.getElementById("email").value;
@@ -931,7 +935,7 @@ async function mergeImageWithBackground(foregroundUri, backgroundImageUrl) {
     });
 
     // Capture d'une photo avec la caméra
-    captureBtn.addEventListener("click", () => {
+    document.getElementById("captureBtn").addEventListener("click", () => {
         var email = document.getElementById("email").value;
         var fname = document.getElementById("fname").value;
         var lname = document.getElementById("lname").value;
@@ -965,9 +969,8 @@ async function mergeImageWithBackground(foregroundUri, backgroundImageUrl) {
         capturedPhoto.style.display = "block";
         photoDataInput.value = photoDataUrl;
         
-        // Afficher les options après capture
-        removeBgBtn.style.display = "inline-block";
-        payNowBtn.style.display = "inline-block";
+        // Appeler autoRemoveBackground automatiquement
+        autoRemoveBackground(photoDataUrl);
         
         // Fermer la caméra
         if (stream) {
@@ -978,12 +981,24 @@ async function mergeImageWithBackground(foregroundUri, backgroundImageUrl) {
         }
     });
 
-    // Bouton pour supprimer le fond
-    removeBgBtn.addEventListener("click", () => {
-        autoRemoveBackground(capturedPhoto.src);
+    // Gestion de l'upload de fichier
+    document.getElementById("fileInput").addEventListener("change", (event) => {
+        const file = event.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                capturedPhoto.src = e.target.result;
+                capturedPhoto.style.display = "block";
+                photoDataInput.value = e.target.result;
+                
+                // Appeler autoRemoveBackground automatiquement
+                autoRemoveBackground(e.target.result);
+            };
+            reader.readAsDataURL(file);
+        }
     });
 
-    // Bouton pour payer directement (sans suppression de fond)
+    // Bouton pour payer directement
     payNowBtn.addEventListener("click", () => {
         // Afficher l'overlay de verrouillage et le message d'état
         photoUploaded = true;
@@ -992,25 +1007,6 @@ async function mergeImageWithBackground(foregroundUri, backgroundImageUrl) {
         
         // Proposer le paiement
         showPaypalDiv();
-    });
-
-    // Gestion de l'upload de fichier
-    fileInput.addEventListener("change", (event) => {
-        const file = event.target.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                // Afficher l'image téléchargée
-                capturedPhoto.src = e.target.result;
-                capturedPhoto.style.display = "block";
-                photoDataInput.value = e.target.result;
-                
-                // Afficher les options après upload
-                removeBgBtn.style.display = "inline-block";
-                payNowBtn.style.display = "inline-block";
-            };
-            reader.readAsDataURL(file);
-        }
     });
     </script>
 </body>
