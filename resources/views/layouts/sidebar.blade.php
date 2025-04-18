@@ -129,12 +129,7 @@
         </a>
     </li>
 
-    <li class="nav-item" id="hover-background">
-        <a class="nav-link" href="{{ route('gamifications.index') }}">
-            <i class="fas fa-gamepad"></i>
-            <span>Gamification</span>
-        </a>
-    </li>
+    
 
     <li class="nav-item" id="hover-background">
         <a class="nav-link" href="{{ route('tasks.index') }}">
