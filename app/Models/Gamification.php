@@ -22,6 +22,10 @@ class Gamification extends Model
     {
         return $this->hasMany(Submited_Task::class, 'id_task');
     }
-
+    
+    public function rang()
+    {
+        return $this->belongsTo(Rang::class, 'id_rang');
+    }
     
 }

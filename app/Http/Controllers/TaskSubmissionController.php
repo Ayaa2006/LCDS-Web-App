@@ -123,12 +123,6 @@ public function approve($id)
             $pointsToAdd = $submission->task->point ?? 0;
             $gamification->increment('point', $pointsToAdd);
             $gamification->increment('tasks_done');
-
-            // Met à jour le niveau si nécessaire
-            $newLevel = floor($gamification->point / 100) + 1;
-            if ($newLevel > $gamification->level) {
-                $gamification->update(['level' => $newLevel]);
-            }
         });
 
         return back()->with('success', 'Soumission approuvée et points attribués');

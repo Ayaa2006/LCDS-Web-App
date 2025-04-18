@@ -9,20 +9,20 @@ use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB; // Added missing import
 use Illuminate\Support\Facades\Log;
+use App\Services\GamificationService;
 
 class GamificationController extends Controller
 {
-    const POINTS_PER_LEVEL = 100;
-    
     public function __construct()
     {
         $this->middleware('auth');
     }
 
+    
+
     public function index()
     {
       
-
     $user = Auth::user();
     $submissions = $this->getUserSubmissions(); // Récupération des soumissions
 
@@ -39,25 +39,8 @@ class GamificationController extends Controller
            'submissions' => $submissions ?? collect(), // 💡 Assure qu'on passe toujours une collection vide au minimum
     'hasSubmissions' => isset($submissions) && $submissions->isNotEmpty(),
      'gamification' => $gamification,
-            'pointsToNextLevel' => $pointsToNextLevel,
-            'currentLevelProgress' => $currentLevelProgress,
             'tasks' => $tasks // Added to match your view
         ]);
-    }
-    
-    protected function calculateLevelProgress(?Gamification $gamification): array
-    {
-        if (!$gamification) {
-            return [0, 0];
-        }
-        
-        $nextLevelThreshold = ($gamification->level + 1) * self::POINTS_PER_LEVEL;
-        $pointsToNextLevel = max(0, $nextLevelThreshold - $gamification->points);
-        
-        $currentLevelProgress = ($gamification->points % self::POINTS_PER_LEVEL) / self::POINTS_PER_LEVEL * 100;
-        $currentLevelProgress = min(100, $currentLevelProgress);
-        
-        return [$pointsToNextLevel, $currentLevelProgress];
     }
     
     public function showTask($taskId)
@@ -151,8 +134,22 @@ public function generateCode(Request $request = null, $autoGenerate = false)
 }
 
 
+public function getGamificationData($userId)
+{
+    $gamification = Gamification::where('user_id', $userId)->first();
+    $rang = $gamification ? $gamification->rang : null;
+    if (!$gamification) {
+        return response()->json(['error' => 'Gamification profile not found'], 404);
+    }
 
-    
+    $remaining = app(GamificationService::class)->calculateRemainingTasksToNextLevel($gamification);
+
+    return response()->json([
+        'gamification' => $gamification,
+        'rang' => $rang,
+        'remaining_tasks' => $remaining,
+    ]);
+}
 
     
 }

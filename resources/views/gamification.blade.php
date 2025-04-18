@@ -5,17 +5,31 @@
 @endphp
 @auth
     @php
-        $gamification = Auth::user()->gamification ?? new App\Models\Gamification([
-            'point' => 0,
-            'level' => 1,
-            'tasks_done' => 0
-        ]);
+        $userId = Auth::id();
+        $username = Auth::user()->name;
+        $gamificationResponse = app('App\Http\Controllers\GamificationController')->getGamificationData($userId);
+        $gamificationData = $gamificationResponse->getData(true); // Decode JSON response to array
+        $gamification = $gamificationData['gamification'];
+        $rang = $gamificationData['rang'];
+        $remainingTasks = $gamificationData['remaining_tasks'];
     @endphp
+<script>
+        //if remainingTasks is 0 , reload the page
 
-    <div class="progress-bar" 
-         style="width: {{ min(100, ($gamification->point % 100)) }}%">
-        Niveau {{ $gamification->level }} - {{ $gamification->point }} points
-    </div>
+        document.addEventListener("DOMContentLoaded", function() {
+            if ({{ $remainingTasks }} === 0) {
+                window.location.reload();
+            }
+        });
+</script>
+    @php
+    $progressPercentage = $remainingTasks > 0 
+        ? ($gamification['tasks_done'] / ($gamification['tasks_done'] + $remainingTasks)) * 100 
+        : 100;
+
+    $currentLevelProgress = round($progressPercentage, 2); // Ensure $currentLevelProgress is defined
+    @endphp
+   
 @endauth
 
 @if ($userRole === 'admin')
@@ -61,31 +75,6 @@
         padding: 30px 40px;
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
         border: 1px solid var(--border-color);
-    }
-
-    .header-image {
-        background-image: linear-gradient(rgba(44, 62, 80, 0.8), rgba(44, 62, 80, 0.8)), 
-                          url("{{ asset('banner.jpg') }}");
-        background-size: cover;
-        color: white;
-        text-align: center;
-        padding: 80px 0;
-        position: relative;
-        height: auto;
-        border-radius: 8px;
-        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-        margin-bottom: 30px;
-    }
-
-    .header-image h1 {
-        font-weight: 700;
-        font-size: 2.5rem;
-        margin-bottom: 10px;
-    }
-
-    .header-image p {
-        font-size: 1.2rem;
-        opacity: 0.9;
     }
 
     .points-box {
@@ -460,18 +449,94 @@
         text-decoration: underline;
     }
 </style>
-    </style>
+
 </head>
 
 <body>
     @include('navbar')
 
-    <div class="gamification-container">
-        <!-- Header -->
-        <div class="header-image">
-            <h1>Gamification Dashboard</h1>
-            <p>Complete tasks, earn points, and unlock rewards!</p>
+    <script>
+  function getRangColor(libelle) {
+    if (!libelle) return '#000000';
+
+    const normalizedLibelle = libelle.toLowerCase().trim();
+
+    const rangColors = {
+      'recrue': '#A9A9A9',
+      'apprenti': '#CD7F32',
+      'novice': '#C0C0C0',
+      'adepte': '#2E8B57',
+      'expert': '#4169E1',
+      'maitre': '#800080',
+      'champion': '#FFA500',
+      'legende': '#FFD700',
+      'heros': '#00FFFF',
+      'genie': '#E5E4E2',
+      'icone': '#DC143C',
+      'virtuose': '#000000',
+      'legendaire': '#FF00FF',
+      'immortel': '#E6E6FA',
+      'divin': '#8A2BE2'
+    };
+
+    return rangColors[normalizedLibelle] || '#000000';
+  }
+</script>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const rangLibelle = "{{ $rang['libelle'] }}";
+        const color = getRangColor(rangLibelle);
+        const rankElements = document.querySelectorAll('.rank');
+
+        rankElements.forEach(element => {
+            element.style.color = color;
+        });
+    });
+</script>
+
+
+<div class="gamification-container">
+    <!-- Header -->
+    <style>
+    .header-container {
+        position: relative;
+        text-align: center;
+        margin-bottom: 30px;
+    }
+
+    .header-image {
+        width: 100%;
+        border-radius: 8px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        filter: blur(2.5px); /* Apply blur effect to the image */
+    }
+
+    .header-text {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        color: white;
+        z-index: 1;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+    }
+
+    .header-text h1,
+    .header-text h2,
+    .header-text h4 {
+        margin: 0;
+    }
+    </style>
+
+    <div class="header-container">
+        <img src="{{ asset('banner.jpg') }}" alt="Header Image" class="header-image">
+        <div class="header-text">
+            <h1>Revoilà , {{$username}}</h1>
+            <h2 class='rank'>{{$rang['libelle']}}</h2>
+            <h4 class='rank'>{{$rang['description']}}</h4>
         </div>
+    </div>
 
         <!-- Points Box -->
         <div class="points-box">
@@ -480,28 +545,28 @@
                     <div class="stat-icon text-primary">
                         <i class="fas fa-trophy"></i>
                     </div>
-                    <div class="stat-value">{{ $gamification->level }}</div>
+                    <div class="stat-value">{{ $gamification['level'] }}</div>
                     <div class="stat-label">Current Level</div>
                 </div>
                 <div class="stat-item">
                     <div class="stat-icon text-warning">
                         <i class="fas fa-star"></i>
                     </div>
-                    <div class="stat-value">{{ $gamification->point }}</div>
+                    <div class="stat-value">{{ $gamification['point'] }}</div>
                     <div class="stat-label">Total Points</div>
                 </div>
                 <div class="stat-item">
                     <div class="stat-icon text-success">
                         <i class="fas fa-check-circle"></i>
                     </div>
-                    <div class="stat-value">{{ $gamification->tasks_done }}</div>
+                    <div class="stat-value">{{ $gamification['tasks_done'] }}</div>
                     <div class="stat-label">Tasks Completed</div>
                 </div>
                 <div class="stat-item">
                     <div class="stat-icon text-info">
                         <i class="fas fa-arrow-up"></i>
                     </div>
-                    <div class="stat-value">{{ $pointsToNextLevel }}</div>
+                    <div class="stat-value">{{ $remainingTasks }}</div>
                     <div class="stat-label">To Next Level</div>
                 </div>
             @else
@@ -847,7 +912,7 @@ document.addEventListener("DOMContentLoaded", function() {
             <label for="your-code" class="form-label">Votre code de parrainage personnel</label>
                 <div class="d-flex">
                     <input type="text" class="form-control me-2" id="your-code" readonly 
-                           value="{{ $gamification->code ?? '' }}" 
+                           value="{{ $gamification['code'] ?? '' }}" 
                            placeholder="Votre code apparaîtra ici">
                     <button class="btn btn-dark-custom" id="copy-code">
                         <i class="fas fa-copy"></i> Copier

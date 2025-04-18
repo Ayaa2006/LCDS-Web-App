@@ -68,20 +68,52 @@ class GamificationService
         }
     }
 
-    protected function calculateRemainingTasks($currentLevel, $tasksDone)
+    public function calculateRemainingTasksToNextLevel(Gamification $gamification, callable $initialize = null): int
     {
-        $remaining = 0;
-        
-        if ($currentLevel == 1) {
-            $remaining = 2 - $tasksDone;
-        } 
-        elseif ($currentLevel <= 6) {
-            $remaining = ($currentLevel * 2 + 1) - $tasksDone;
-        } 
-        else {
-            $remaining = (($currentLevel - 6) * 4) + 4 - $tasksDone;
+        $tasksDone = $gamification->tasks_done ?? 0;
+        $currentLevel = $gamification->level;
+    
+        // Determine tasks required for the current level
+
+        if ($currentLevel === 1) {
+            $tasksRequired = 2;
+        } elseif ($currentLevel === 2) {
+            $tasksRequired = 5;
+        } elseif ($currentLevel === 3) {
+            $tasksRequired = 9;
+        } elseif ($currentLevel === 4) {
+            $tasksRequired = 14;
+        } elseif ($currentLevel === 5) {
+            $tasksRequired = 20;
+        } elseif ($currentLevel === 6) {
+            $tasksRequired = 27;
+        } else {
+            $tasksRequired = 27 + (($currentLevel - 6) * 5);
         }
-        
+    
+        $remaining = $tasksRequired - $tasksDone;
+    
+        if ($remaining <= 0) {
+            // Level up if possible
+            $this->updateLevel($gamification);
+    
+            if ($initialize) {
+                call_user_func($initialize);
+            }
+    
+            return 0;
+        }
+    
         return $remaining;
     }
+
+    public function updateLevel(Gamification $gamification)
+{
+    $gamification->level += 1;
+    $gamification->save();
+
+    // You can return success message or bool if needed
+    return true;
+}
+
 }
