@@ -24,34 +24,159 @@ use App\Http\Controllers\MissionController;
 use App\Http\Controllers\EvenementController;
 use App\Http\Controllers\ContactController;
 
+// ==================== PUBLIC ROUTES ====================
 
-// Public route for the /lcds page, using GalerieController's indexsLCDS method to fetch galleries
+// Main pages
 Route::get('/lcds', [GalerieController::class, 'indexsLCDS'])->name('lcds');
-
 Route::get('about', function () {
     return view('about');
 })->name('about');
-
 Route::get('rendez-vous', function () {
     return view('service-photographie');
 })->name('rendez-vous');
-
-
-
-Route::get('vs', function () {
-    return view('visite-virtuelle');
-})->name('vs');
 Route::get('sphoto', function () {
     return view('service-photographie');
 })->name('sphoto');
+Route::get('contact', function () {
+    return view('Contact');
+})->name('contact');
+
+// Public gallery routes
+Route::get('/galerie', [GalerieController::class, 'indexs'])->name('galerie.index');
+Route::get('/blog', [BlogController::class, 'indexs'])->name('blog.index');
+Route::get('/blog/{id}', [BlogController::class, 'showForUser'])->name('user.blogs.show');
+Route::get('/service-photographie', [StockController::class, 'indexs'])->name('sphoto');
+
+// Contact form
+Route::post('/contact', [ContactController::class, 'store'])->name('contact.store');
+
+// ==================== AUTHENTICATION ROUTES ====================
+
+Route::prefix('auth')->group(function () {
+    // Registration
+    Route::get('register', [AuthController::class, 'register'])->name('register');
+    Route::post('register', [AuthController::class, 'registerSave'])->name('register.save');
+    
+    // Login
+    Route::get('login', [AuthController::class, 'login'])->name('login');
+    Route::get('login-admin', [AuthController::class, 'AdminLogin'])->name('AdminLogin');
+    Route::post('login', [AuthController::class, 'userLoginAction'])->name('login.action');
+    Route::post('login-admin', [AuthController::class, 'adminLoginAction'])->name('login.admin');
+    
+    // Logout
+    Route::get('logout', [AuthController::class, 'logout'])->name('logout');
+});
+
+// ==================== ADMIN ROUTES ====================
+Route::middleware(['auth:admin'])->group(function () {
+    Route::get('dashboard', function () {
+        return view('dashboard');
+    })->name('dashboard');
 
 
-//Route::get('vs', function ()) {
-//    return view('processPayment');
-//}
+    // Settings
+    Route::get('/settings', [AuthController::class, 'indexss'])->name('settings.indexss');
+
+Route::get('/galeries', [GalerieController::class, 'index'])->name('galeries.index');
+Route::get('/galeries/create', [GalerieController::class, 'create'])->name('galeries.create');
+Route::get('/galeries/{galerie}/edit', [GalerieController::class, 'edit'])->name('galeries.edit');
+Route::put('/galeries/{galerie}', [GalerieController::class, 'update'])->name('galeries.update');
+Route::delete('/galeries/{galerie}', [GalerieController::class, 'destroy'])->name('galeries.destroy');
+Route::post('/galeries', [GalerieController::class, 'store'])->name('galeries.store');
+Route::get('/galeries/{galerie}', [GalerieController::class, 'show'])->name('galeries.show');
+
+Route::get('/blogs', [BlogController::class, 'index'])->name('blogs.index');
+Route::get('/blogs/create', [BlogController::class, 'create'])->name('blogs.create');
+Route::post('/blogs', [BlogController::class, 'store'])->name('blogs.store');
+Route::get('/blogs/{blog}/edit', [BlogController::class, 'edit'])->name('blogs.edit');
+Route::put('/blogs/{blog}', [BlogController::class, 'update'])->name('blogs.update');
+Route::delete('/blogs/{blog}', [BlogController::class, 'destroy'])->name('blogs.destroy');
+Route::get('/blog/{id}', [BlogController::class, 'show'])->name('blog.show');
 
 
-// *! Reservation
+Route::get('/utilisateurs', [AuthController::class, 'index'])->name('utilisateurs.index');
+Route::delete('/utilisateurs/{id}', [AuthController::class, 'destroy'])->name('utilisateurs.destroy');
+
+// ==================== PHOTO ROUTES ====================
+
+Route::post('/photo', [PhotoController::class, 'store'])->name('photo');
+Route::get('/photoget', [PhotoController::class, 'index'])->name('photoget');
+Route::delete('/photos/{id}', [PhotoController::class, 'destroy'])->name('photos.destroy');
+
+// ==================== EQUIPMENT ROUTES ====================
+
+Route::resource('machines', MachineController::class);
+Route::get('/machines/create', [MachineController::class, 'create'])->name('machines.create');
+Route::post('/machines', [MachineController::class, 'store'])->name('machines.store');
+Route::get('/machines/{machine}/edit', [MachineController::class, 'edit'])->name('machines.edit');
+Route::put('/machines/{machine}', [MachineController::class, 'update'])->name('machines.update');
+
+// ==================== DECOR ROUTES ====================
+
+Route::resource('decors', DecorController::class);
+
+// ==================== CRM ROUTES ====================
+
+Route::resource('agenda-crm', AgendaCrmController::class);
+
+// ==================== SERVICE ROUTES ====================
+
+Route::resource('prestations', PrestationController::class);
+
+// ==================== MISSION ROUTES ====================
+
+Route::resource('missions', MissionController::class);
+
+// ==================== EVENT ROUTES ====================
+
+Route::resource('evenements', EvenementController::class);
+Route::patch('/evenements/{id}/status', [EvenementController::class, 'updateStatus'])
+     ->name('evenements.updateStatus');
+Route::get('/evenements/image/{filename}', [EvenementController::class, 'showImage'])
+     ->name('evenements.showImage');
+
+     
+
+});
+
+
+// ==================== AUTHENTICATED USER ROUTES ====================
+
+Route::middleware('auth')->group(function () {
+    
+    Route::get('vs', function () {
+        return view('visite-virtuelle');
+    })->name('vs');
+    
+    // Profile
+    Route::get('/profile', [ProfileController::class, 'showProfile'])->name('profile.index');
+    Route::get('profile/edit', [AuthController::class, 'edit'])->name('profile-edit');
+    Route::put('profile/update', [AuthController::class, 'update'])->name('profile.update');
+    Route::delete('profile/delete', [AuthController::class, 'destroyProfile'])->name('deleteAccount');
+    
+    
+   // ==================== GAMIFICATION ROUTES ====================
+    Route::get('gamification', [AuthController::class, 'indexsss'])->name('gamification');
+    Route::post('gamification/{task}', [AuthController::class, 'completeTask'])->name('complete-task');
+Route::get('/gamifications', [GamificationController::class, 'index'])->name('gamifications.index');
+Route::post('/gamifications/add-points', [GamificationController::class, 'addPoints'])->name('gamifications.addPoints');
+Route::get('/gamifications/{userId}', [GamificationController::class, 'show'])->name('gamifications.show');
+Route::get('/gamification', [GamificationController::class, 'index'])
+     ->name('gamification')
+     ->middleware('auth');
+Route::get('/get-submissions/{userId}', [GamificationController::class, 'getUserSubmissionsForAjax']);
+Route::post('/gamification/generate-code', [GamificationController::class, 'generateCode'])
+    ->name('gamification.generate-code')
+    ->middleware('auth');
+    // ==================== PAYMENT ROUTES ====================
+
+Route::post('/vs', [PaimentController::class, 'savePayment'])->name('save.payment');
+Route::post('abnstore', [AbonnementController::class, 'store'])->name('abnstore');
+Route::post('/desabonner', [AbonnementController::class, 'destroyByCode'])->name('desabonner');
+
+});
+
+// ==================== RESERVATION ROUTES ====================
 
 Route::post('reservationsclient', [ReservationController::class, 'store'])->name('reservationsclient');
 Route::delete('resdestroy/{id}', [ReservationController::class, 'destroy'])->name('resdestroy');
@@ -61,192 +186,48 @@ Route::delete('/reservation/supprimer', [ReservationController::class, 'deleteRe
 Route::get('/reservations', [ReservationController::class, 'index'])->name('reservations.index');
 Route::get('/reservations/existantes', [ReservationController::class, 'getReservations']);
 
-// web.php
-Route::post('/photo', [PhotoController::class, 'store'])->name('photo');
-Route::get('/photoget', [PhotoController::class, 'index'])->name('photoget');
-
-Route::delete('/photos/{id}', [PhotoController::class, 'destroy'])->name('photos.destroy');
-
-
-
-//paiment
-Route::post('/vs', [PaimentController::class, 'savePayment'])->name('save.payment');
-
-// *!
-
-Route::prefix('auth')->group(function () {
-    Route::get('register', [AuthController::class, 'register'])->name('register');
-    Route::post('register', [AuthController::class, 'registerSave'])->name('register.save');
-
-    Route::get('login', [AuthController::class, 'login'])->name('login');
-    Route::post('login', [AuthController::class, 'loginAction'])->name('login.action');
-
-    Route::get('logout', [AuthController::class, 'logout'])->name('logout');
-
-});
-
-Route::get('dashboard', function () {
-    return view('dashboard');
-})->name('dashboard');
-
-// Route::get('gamif', function () {
-//     return view('gamification');
-// })->name('gamif');
-
-###########################################################
-Route::middleware('auth')->group(function () {
 
 
 
 
-    Route::get('vs', function () {
-        return view('visite-virtuelle');
-    })->name('vs');
-    Route::get('sphoto', function () {
-        return view('service-photographie');
-    })->name('sphoto');
-
-});
-
-####Abonnement
-Route::post('abnstore', [AbonnementController::class, 'store'])->name('abnstore');
-
-
-// Route::get('/generate-pdf', [ProductController::class, 'generatePdf'])->name('generate.pdf');
-// Route::get('/contact', [ActivityLogController::class, 'index'])->name('contact.index');
-
-// Route::get('/products', [ProductController::class, 'index'])->name('products');
-//Route::get('/products', [ProductController::class, 'index'])->name('products.index');
-
-// ***************************************************************
-
-
-// Routes pour les ventes
-//Route::get('/ventes', [VenteController::class, 'index'])->name('ventes.index');
+// ==================== SUBSCRIPTION ROUTES ====================
 
 
 
-// Display the list of stock items (GET) to the admin
+// ==================== STOCK ROUTES ====================
+
 Route::get('/stock', [StockController::class, 'index'])->name('stock.index');
-//To the user interface
-Route::get('/service-photographie', [StockController::class, 'indexs'])->name('sphoto');
-
-
-// Display the stock creation form (GET)
 Route::get('/stock/create', [StockController::class, 'create'])->name('stock.create');
-// Handle form submission to store the new stock item (POST)
 Route::post('/stock/store', [StockController::class, 'store'])->name('stock.store');
-// Show form for editing a stock item (GET)
 Route::get('/stock/{stock}/edit', [StockController::class, 'edit'])->name('stock.edit');
-// Update a stock item
 Route::put('/stock/{stock}', [StockController::class, 'update'])->name('stock.update');
-// Delete stock item
 Route::delete('/stock/{stock}', [StockController::class, 'destroy'])->name('stock.destroy');
 
 
-// routes/web.php
-// Public blog page route
-Route::get('/blog', [BlogController::class, 'index'])->name('blog.index');
-// User-facing blog route
-Route::get('/blog', [BlogController::class, 'indexs'])->name('blog.index');
-// Display all blogs for admin
-Route::get('/blogs', [BlogController::class, 'index'])->name('blogs.index');
-// Display blogs for users (if different from admin view)
-Route::get('/user-blogs', [BlogController::class, 'indexs'])->name('blogs.user');
-// Display the form to create a new blog
-Route::get('/blogs/create', [BlogController::class, 'create'])->name('blogs.create');
-// Store a new blog
-Route::post('/blogs', [BlogController::class, 'store'])->name('blogs.store');
-// Display the form to edit an existing blog
-Route::get('/blogs/{blog}/edit', [BlogController::class, 'edit'])->name('blogs.edit');
-// Update an existing blog
-Route::put('/blogs/{blog}', [BlogController::class, 'update'])->name('blogs.update');
-// Delete an existing blog
-Route::delete('/blogs/{blog}', [BlogController::class, 'destroy'])->name('blogs.destroy');
-//show route
-Route::get('/blog/{id}', [BlogController::class, 'show'])->name('blog.show');
-Route::get('/blog/{id}', [BlogController::class, 'showForUser'])->name('user.blogs.show');
 
-
-
-
-// Define the route for the gallery
-Route::get('/galerie', [GalerieController::class, 'index'])->name('galerie.index');
-// Public routes for the gallery
-Route::get('/galerie', [GalerieController::class, 'indexs'])->name('galerie.index'); // Display galleries for users
-
-
-// // Admin routes for the gallery (grouped under admin prefix for clarity)
-//Route for displaying the list of galleries
-Route::get('/galeries', [GalerieController::class, 'index'])->name('galeries.index');
-// Route for showing the form to create a new gallery
-Route::get('/galeries/create', [GalerieController::class, 'create'])->name('galeries.create');
-// Route for storing a new gallery
-Route::post('/galeries', [GalerieController::class, 'store'])->name('galeries.store');
-// Route for displaying a specific gallery (if needed)
-Route::get('/galeries/{galerie}', [GalerieController::class, 'show'])->name('galeries.show');
-// Route for showing the form to edit a specific gallery
-Route::get('/galeries/{galerie}/edit', [GalerieController::class, 'edit'])->name('galeries.edit');
-// Route for updating a specific gallery
-Route::put('/galeries/{galerie}', [GalerieController::class, 'update'])->name('galeries.update');
-// Route for deleting a specific gallery
-Route::delete('/galeries/{galerie}', [GalerieController::class, 'destroy'])->name('galeries.destroy');
-
-
-
-// Display all users for admin
-Route::get('/utilisateurs', [AuthController::class, 'index'])->name('utilisateurs.index');
-Route::delete('/utilisateurs/{id}', [AuthController::class, 'destroy'])->name('utilisateurs.destroy');
-
-Route::get('/profile', [AuthController::class, 'indexs'])->name('profile.index');
-// Route for editing profile
-Route::get('profile/edit', [AuthController::class, 'edit'])->name('profile-edit');
-Route::put('profile/update', [AuthController::class, 'update'])->name('profile.update');
-Route::delete('profile/delete', [AuthController::class, 'destroyProfile'])->name('deleteAccount');
-// Route::delete('profile/delete/{id}', [AuthController::class, 'destroy'])->name('deleteAccount');
-
-
-
-Route::get('/settings', [AuthController::class, 'indexss'])->name('settings.indexss');
-
-
+// ==================== TASK MANAGEMENT ROUTES ====================
 
 Route::get('/tasks', [TaskController::class, 'index'])->name('tasks.index');
 Route::post('/tasks/add-task', [TaskController::class, 'addTask'])->name('tasks.add-task');
 Route::get('/tasks/edit-task/{id}', [TaskController::class, 'edit'])->name('tasks.edit-task');
 Route::post('/tasks/update-task/{id}', [TaskController::class, 'update'])->name('tasks.update-task');
 Route::delete('/tasks/delete-task/{id}', [TaskController::class, 'deleteTask'])->name('tasks.delete-task');
+Route::get('/edit/{id}', [TaskController::class, 'edit'])->name('tasks.edit');
+Route::put('/update/{id}', [TaskController::class, 'update'])->name('tasks.update-task');
+
+// Task submissions
 Route::post('/tasks/{task}/submit', [TaskSubmissionController::class, 'store'])->name('submitMyTask');
-Route::get('/edit/{id}', [TaskController::class, 'edit'])->name('tasks.edit'); // Ajoutez cette ligne
-Route::put('/update/{id}', [TaskController::class, 'update'])->name('tasks.update-task'); // Notez le changement de nom
 Route::get('/tasks/{id}/submissions', [TaskSubmissionController::class, 'viewSubmissions'])->name('tasks.submissions');
-Route::post('/submissions/{id}/approve', [TaskSubmissionController::class, 'approve'])
-    ->name('submissions.approve');
-Route::post('/submissions/{id}/reject', [TaskSubmissionController::class, 'reject'])
-    ->name('submissions.reject');
+Route::post('/submissions/{id}/approve', [TaskSubmissionController::class, 'approve'])->name('submissions.approve');
+Route::post('/submissions/{id}/reject', [TaskSubmissionController::class, 'reject'])->name('submissions.reject');
 Route::get('/submissions/download/{path}', [TaskSubmissionController::class, 'download'])
     ->name('submissions.download')
     ->where('path', '.*');
 
 
 
+// ==================== DELIVERY ROUTES ====================
 
-Route::get('/gamifications', [GamificationController::class, 'index'])->name('gamifications.index');
-Route::post('/gamifications/add-points', [GamificationController::class, 'addPoints'])->name('gamifications.addPoints');
-Route::get('/gamifications/{userId}', [GamificationController::class, 'show'])->name('gamifications.show');
-Route::get('/gamification', [GamificationController::class, 'index'])
-     ->name('gamification')
-     ->middleware('auth');
-Route::get('/get-submissions/{userId}', [GamificationController::class, 'getUserSubmissionsForAjax']);
-Route::get('gamification', [AuthController::class, 'indexsss'])->name(name: 'gamification');
-Route::post('gamification/{task}', [AuthController::class, 'completeTask'])->name('complete-task');
-Route::post('/gamification/generate-code', [GamificationController::class, 'generateCode'])
-    ->name('gamification.generate-code')
-    ->middleware('auth');
-
-
-
-// Routes pour les livraisons
 Route::get('/livraisons', [LivraisonController::class, 'index'])->name('livraisons.index');
 Route::get('/livraisons/create', [LivraisonController::class, 'create'])->name('livraisons.create');
 Route::post('/livraisons', [LivraisonController::class, 'store'])->name('livraisons.store');
@@ -255,67 +236,25 @@ Route::get('/livraisons/{id}/edit', [LivraisonController::class, 'edit'])->name(
 Route::put('/livraisons/{id}', [LivraisonController::class, 'update'])->name('livraisons.update');
 Route::delete('/livraisons/{id}', [LivraisonController::class, 'destroy'])->name('livraisons.destroy');
 
+// ==================== SALES ROUTES ====================
+
 Route::resource('ventes', VenteController::class);
 
-
-
-
-// Route::post('gamification/storeCode', [ParrainageController::class, 'storeCode']);
-// // Route to generate a referral code
-// Route::post('gamification/generateCode', [ParrainageController::class, 'generateCode']);
-// // Route to validate a referral code
-// Route::post('gamification/validateReferralCode', [ParrainageController::class, 'validateReferralCode']);
-
+// ==================== SPONSORSHIP ROUTES ====================
 
 Route::post('/store-code', [ParrainageController::class, 'storeCode'])->name('store.code');
 Route::post('/validate-referral-code', [ParrainageController::class, 'validateReferralCode'])->name('validate.referral.code');
-
-
-Route::get('gamification', [AuthController::class, 'indexsss'])->name('gamification');
-
-
-
-Route::get('/profile', [ParrainageController::class, 'showProfile'])->name('profile.index');
-Route::get('/profile', [ReservationController::class, 'indexUserReservations'])->name('profile.index');
-Route::get('/profile', [ProfileController::class, 'showProfile'])->name('profile.index');
-//pour ladmin
 Route::get('/parrainages', [ParrainageController::class, 'index'])->name('parrainages.index');
-
-
-
-
-Route::resource('machines', MachineController::class);
-
-Route::get('/machines/create', [MachineController::class, 'create'])->name('machines.create');
-Route::post('/machines', [MachineController::class, 'store'])->name('machines.store');
-Route::get('/machines/{machine}/edit', [MachineController::class, 'edit'])->name('machines.edit');
-Route::put('/machines/{machine}', [MachineController::class, 'update'])->name('machines.update');
-
-Route::resource('decors', DecorController::class);
-Route::resource('agenda-crm', AgendaCrmController::class);
-
-
-Route::resource('prestations', PrestationController::class);
-
-Route::resource('missions', MissionController::class);
-
 Route::post('/validate-referral-code', [ParrainageController::class, 'validateReferralCode'])
     ->middleware('auth');
-    Route::post('/test-referral', function(Request $request) {
-        \Log::info('Test endpoint hit');
-        return response()->json(['success' => true]);
-    });
-
-Route::resource('evenements', EvenementController::class);
-Route::patch('/evenements/{id}/status', [EvenementController::class, 'updateStatus'])
-     ->name('evenements.updateStatus');
-Route::get('/evenements/image/{filename}', [EvenementController::class, 'showImage'])
-     ->name('evenements.showImage');
+Route::post('/test-referral', function(Request $request) {
+    \Log::info('Test endpoint hit');
+    return response()->json(['success' => true]);
+});
 
 
-Route::get('contact', function () {
-        return view('Contact');
-    })->name('contact');
-Route::post('/contact', [ContactController::class, 'store'])->name('contact.store');
+
+// ==================== CONTACT MESSAGES ROUTES ====================
+
 Route::get('/messages', [ContactController::class, 'index'])->name('contact.messages');
 Route::post('/contact/{id}/reply', [ContactController::class, 'reply'])->name('contact.reply');

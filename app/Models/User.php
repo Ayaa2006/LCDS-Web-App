@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
+use Illuminate\Support\Facades\Auth;
 
 class User extends Authenticatable
 {
@@ -45,7 +46,16 @@ class User extends Authenticatable
         'password' => 'hashed',
     ];
 
+    public function getRoleName()
+    {
+        // Check if the user is authenticated
+        if (Auth::check()) {
+            // Get the role from the session
+            return session('role');
+        }
 
+        return null; // or handle unauthenticated case
+    }
 
     public function upload()
     {

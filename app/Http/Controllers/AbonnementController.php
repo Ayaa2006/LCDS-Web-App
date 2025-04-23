@@ -51,6 +51,23 @@ class AbonnementController extends Controller
             }
             return $code;
         }
+    
+        public function destroyByCode(Request $request)
+{
+    $request->validate([
+        'code' => 'required|string|exists:abonnements,code',
+    ]);
+
+    $abonnement = Abonnement::where('code', $request->code)->first();
+
+    if ($abonnement) {
+        $abonnement->delete();
+        return redirect()->back()->with('success', 'Désabonnement effectué avec succès.');
+    } else {
+        return redirect()->back()->with('error', 'Code non trouvé.');
+    }
+}
+
     }
     
 

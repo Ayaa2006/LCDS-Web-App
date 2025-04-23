@@ -366,7 +366,7 @@ window.location.href = "{{ route('dashboard') }}";
         <div
             style="width: 40%; margin: 0 auto; padding: 20px; background-color:rgb(255, 255, 255); border-radius: 10px; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);">
             <h4 class="text-center" style="color: #333; margin-bottom: 20px;">Se désabonner à notre newsletter</h4>
-            <form action="{{ route('abnstore') }}" class="form" method="POST">
+            <form action="{{ route('desabonner') }}" class="form" method="POST">
                 @csrf
                 <div class="input-group">
                     <input type="text" class="form-control" placeholder="ABC123EFG9" name="code" required

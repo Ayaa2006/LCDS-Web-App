@@ -1,7 +1,5 @@
 @extends('layouts.app')
-{{-- @php
-dd($admin);
-@endphp --}}
+
 @section('contents')
 <div class="container">
     <div class="row justify-content-center">
@@ -24,8 +22,8 @@ dd($admin);
                         @if (auth()->check())
                             <h2>{{ auth()->user()->name }}</h2>
                             <p class="text-muted">Email: {{ auth()->user()->email }}</p>
-                            <p class="text-muted">Created At: {{ auth()->user()->created_at->format('d M Y') }}</p>
-                            <p class="text-muted">Last Updated: {{ auth()->user()->updated_at->format('d M Y') }}</p>
+                            <p class="text-muted">Created At: {{ auth()->user()->created_at ? auth()->user()->created_at->format('d M Y') : 'Not specified' }}</p>
+                            <p class="text-muted">Last Updated: {{ auth()->user()->updated_at ? auth()->user()->updated_at->format('d M Y') : 'Not specified' }}</p>
                         @else
                             <p class="text-danger">User is not authenticated.</p>
                         @endif

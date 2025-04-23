@@ -24,13 +24,13 @@ class GamificationController extends Controller
     {
       
     $user = Auth::user();
-    $submissions = $this->getUserSubmissions(); // Récupération des soumissions
+    //$submissions = $this->getUserSubmissions(); // Récupération des soumissions
 
         // Get user's gamification data
         $gamification = Gamification::where('user_id', $user->id)->first();
         
         // Calculate level progress
-        list($pointsToNextLevel, $currentLevelProgress) = $this->calculateLevelProgress($gamification);
+        //list($pointsToNextLevel, $currentLevelProgress) = $this->calculateLevelProgress($gamification);
 
         // Get all available tasks
         $tasks = Task::all();
@@ -150,6 +150,9 @@ public function getGamificationData($userId)
         'remaining_tasks' => $remaining,
     ]);
 }
+
+
+
 
     
 }

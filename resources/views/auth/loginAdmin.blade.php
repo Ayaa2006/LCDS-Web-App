@@ -76,7 +76,7 @@
                   <div class="text-center">
                     <h1 class="h4 mb-4" style="color: white">Bienvenue !</h1>
                   </div>
-                  <form action="{{ route('login.action') }}" method="POST" class="user">
+                  <form action="{{ route('login.admin') }}" method="POST" class="user">
                     @csrf
                     @if ($errors->any())
                       <div class="alert alert-danger">
@@ -88,10 +88,10 @@
                       </div>
                     @endif
                     <div class="form-group">
-                      <input name="email" type="email" class="form-control form-control-user" id="exampleInputEmail" aria-describedby="emailHelp" placeholder="Entrez l'adresse e-mail...">
+                      <input name="Adminemail" type="email" class="form-control form-control-user" id="exampleInputEmail" aria-describedby="emailHelp" placeholder="Entrez l'adresse e-mail...">
                     </div>
                     <div class="form-group">
-                      <input name="password" type="password" class="form-control form-control-user" id="exampleInputPassword" placeholder="Mot de passe">
+                      <input name="Adminpassword" type="password" class="form-control form-control-user" id="exampleInputPassword" placeholder="Mot de passe">
                     </div>
                     <div class="form-group">
                       <div class="custom-control custom-checkbox small">
@@ -103,9 +103,7 @@
                   </form>
                   <hr>
                   <div class="text-center">
-                  <a class="small light-blue-link" href="{{ route('register') }}">Créez un compte !</a>
-                  <label> | </label>
-                  <a class="small light-blue-link" href="{{ route('AdminLogin') }}">Vous étes un administrateur ?</a>
+                  <a class="small light-blue-link" href="{{ route('login') }}">Se Connecter au tant qu'utilisateur</a>
                   </div>
                 </div>
               </div>

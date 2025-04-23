@@ -144,40 +144,6 @@ class AuthController extends Controller
     }
 
 
-
-
-    private function addPointsToUser($userId, $points)
-    {
-        // Vérifier si l'utilisateur a déjà une entrée dans la table gamification
-        $gamification = Gamification::firstOrNew(['user_id' => $userId]);
-
-        // Ajouter les points à la colonne 'point' au lieu de 'points'
-        $gamification->point = $gamification->point + $points;
-        $gamification->level = $this->calculateLevel($gamification->point);
-
-        // Sauvegarder les changements
-        $gamification->save();
-    }
-
-    private function calculateLevel($points)
-    {
-        // Logique pour calculer le niveau en fonction des points
-        if ($points >= 1000) {
-            return 5;
-        } elseif ($points >= 500) {
-            return 4;
-        } elseif ($points >= 200) {
-            return 3;
-        } elseif ($points >= 100) {
-            return 2;
-        } else {
-            return 1;
-        }
-    }
-
-
-
-
     public function profile()
 {
     $user = Auth::user(); // Fetch the authenticated user
@@ -192,36 +158,64 @@ class AuthController extends Controller
         return view('auth/login');
     }
 
-    public function loginAction(Request $request)
+    public function AdminLogin()
     {
-        Validator::make($request->all(), [
+        return view('auth/loginAdmin');
+    }
+    public function userLoginAction(Request $request)
+    {
+        // Validate the request data
+        $request->validate([
             'email' => 'required|email',
             'password' => 'required'
-        ])->validate();
+        ]);
 
-        // auth user
+        // Attempt to authenticate the user using the 'web' guard
         if (Auth::guard('web')->attempt($request->only('email', 'password'), $request->boolean('remember'))) {
             $request->session()->regenerate();
-        //session variable role
-        $request->session()->put('role', 'user');
-            return redirect()->route('lcds');
+            $request->session()->put('role', 'user');
+            session(['role' => 'user']);
+            return redirect()->route('lcds')->with('success', 'Login successful.');
         }
-    // Manually authenticate the Admin model for plain text passwords
-    $credentials = $request->only('email', 'password');
-    $admin = Admin::where('email', $credentials['email'])->first();
 
-    if ($admin && $admin->password === $credentials['password']) {
-        Auth::guard('admin')->login($admin);
+        // Handle failed login attempts for users
+        return redirect()->back()->withErrors(['message' => 'Invalid user credentials. Please try again.']);
+    }
+
+
+    public function adminLoginAction(Request $request)
+    {
+        $credentials = $request->validate([
+            'Adminemail' => 'required|email',
+            'Adminpassword' => 'required'
+        ]);
+    
+        // Manually authenticate the admin
+        $admin = Admin::where('email', $credentials['Adminemail'])->first();
+        
+        // check if the admin exists and verify the password knowing that the password is hashed
+        // If the admin does not exist or the password is incorrect, redirect back with an error
+         // Check if the admin exists and verify the password
+
+
+        if (!$admin || !Hash::check($credentials['Adminpassword'], $admin->password)) {
+            return redirect()->back()->withErrors(['message' => 'Invalid admin credentials. Please try again.']);
+        }
+        // Specify the admin guard explicitly
+        // Log the admin in using the 'admin' guard
+
+        // Regenerate the session to prevent session fixation attacks
         $request->session()->regenerate();
+        session(['role' => 'admin']);
         $request->session()->put('role', 'admin');
-        return redirect()->route('lcds');
+        // Store the admin's role in the session
+        Auth::guard('admin')->login($admin);
+        
+    
+        return redirect()->route('dashboard')->with('success', 'Admin login successful.');
     }
 
-    // Handle failed login attempts
-    return redirect()->back()->withErrors(['message' => 'Invalid credentials.']);
-
-    }
-
+   
 
     public function logout(Request $request)
     {
@@ -232,6 +226,7 @@ class AuthController extends Controller
             return redirect('/lcds');
         } elseif (Auth::guard('admin')->check()) {
             Auth::guard('admin')->logout();
+            session()->forget('role');
             $request->session()->invalidate();
             return redirect('/auth/login');
         }
