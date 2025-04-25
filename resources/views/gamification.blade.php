@@ -628,16 +628,17 @@
                                 @endif
                             </div>
                             <div class="task-actions">
-                                @if($task->CanLink)
+                                @if($task->CanLink && $task->id >2)
                                 <button type="button" class="btn btn-info-custom" onclick="toggleUploadContainer({{ $task->id }})">
                                     <i class="fas fa-images"></i> Images
                                 </button>
-                                @endif
+                                
                                 <button type="button" 
                                         onclick="submitTask({{ $task->id }})" 
                                         class="btn btn-primary-custom">
                                     <i class="fas fa-paper-plane"></i> Submit
                                 </button>
+                                @endif
                             </div>
                         </li>
                     @endforeach
@@ -779,14 +780,17 @@ document.addEventListener("DOMContentLoaded", function() {
                         <th>Tâche</th>
                         <th>Statut</th>
                         <th>Fichiers</th>
+                        <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>`;
 
+        const deleteRoute = "{{ route('submissions.delete', ':id') }}";
+
         submissions.forEach(submission => {
             const statusClass = getStatusClass(submission.status);
             const files = submission.files ? submission.files.split(',') : [];
-
+            //console.log(submission);
             tableHtml += `
                 <tr>
                     <td>${submission.task_title || 'Tâche sans nom'}</td>
@@ -796,6 +800,9 @@ document.addEventListener("DOMContentLoaded", function() {
                             ? renderFileLinks(files) 
                             : 'Aucun fichier'
                     }</td>
+                    <td>
+                        <button type="button" class="btn btn-primary btn-sm" onclick="deleteSubmission(${submission.id_Sub_task})">
+                            <i class="fas fa-trash"></i>
                 </tr>`;
         });
 
@@ -901,6 +908,62 @@ document.addEventListener("DOMContentLoaded", function() {
             </div>`;
     }
 });
+        function deleteSubmission(submissionId) {
+            Swal.fire({
+                title: 'Êtes-vous sûr?',
+                text: "Cette action est irréversible!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Oui, supprimer!',
+                cancelButtonText: 'Annuler'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    fetch(`/submissions/delete/${submissionId}`, {
+                        method: 'DELETE',
+                        headers: {
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                        }
+                    })
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Erreur réseau');
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (data.success) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Supprimé!',
+                                text: data.message,
+                                confirmButtonText: 'OK'
+                            }).then(() => {
+                                window.location.reload();
+                            });
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Erreur!',
+                                text: data.message || 'Une erreur est survenue.',
+                                confirmButtonText: 'OK'
+                            });
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Erreur:', error);
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Erreur!',
+                            text: 'Une erreur inattendue est survenue.',
+                            confirmButtonText: 'OK'
+                        });
+                    });
+                }
+            });
+        }
+
 </script>
 
  <!-- Parrainage Section -->

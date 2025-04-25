@@ -25,7 +25,7 @@ class ParrainageController extends Controller
     }
 
     // Afficher le profil utilisateur avec ses parrainages
-    public function showProfile()
+    /*public function showProfile()
     {
         $user = Auth::user();
 
@@ -35,7 +35,7 @@ class ParrainageController extends Controller
 
 
         return view('profile', compact('user', 'parrainages')); // Vue du profil avec parrainages
-    }
+    }*/
 
 
     public function storeCode(Request $request)
@@ -118,16 +118,18 @@ class ParrainageController extends Controller
         $referrer->increment('tasks_done', 1);
         $userGamification->increment('tasks_done', 1);
         // 4. Compléter la tâche "Parrainage"
+        /*
         $task = Task::firstOrCreate(
             ['title' => 'Parrainage'],
             ['description' => 'Utilisation code parrainage', 'point' => 100]
         );
-
-        Submited_Task::create([
+        *
+        /*Submited_Task::create([
             'id_user' => $user->id,
-            'id_task' => $task->id,
-            'status' => 'completed'
-        ]);
+            'id_task' => 2,
+            'status' => 'completed',
+            'file' => null,
+        ]);*/
 
         DB::commit();
 

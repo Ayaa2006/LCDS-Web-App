@@ -174,6 +174,9 @@ Route::post('/vs', [PaimentController::class, 'savePayment'])->name('save.paymen
 Route::post('abnstore', [AbonnementController::class, 'store'])->name('abnstore');
 Route::post('/desabonner', [AbonnementController::class, 'destroyByCode'])->name('desabonner');
 
+
+Route::DELETE('/submissions/delete/{id}', [TaskSubmissionController::class, 'delete'])->name('submissions.delete');
+
 });
 
 // ==================== RESERVATION ROUTES ====================

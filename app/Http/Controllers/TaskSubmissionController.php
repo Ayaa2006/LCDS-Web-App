@@ -140,8 +140,27 @@ public function reject($id)
     return back()->with('success', 'Soumission rejetée avec succès');
 }
 
+public function delete($id)
+{
+    $submission = Submited_Task::findOrFail($id);
 
+    // Vérifie que le statut est 'waiting' avant de supprimer
+    if ($submission->status !== 'waiting') {
+        return response()->json(['success' => false, 'message' => 'Impossible de supprimer une soumission qui n\'est pas en attente.']);
+    }
+    $submission->delete();
+    
+    // Supprime les fichiers associés
+    $files = explode(',', $submission->files);
+    foreach ($files as $file) {
+        $filePath = 'public/' . trim($file);
+        if (Storage::exists($filePath)) {
+            Storage::delete($filePath);
+        }
+    }
 
+    return response()->json(['success' => true, 'message' => 'Soumission supprimée avec succès']);
+}
 
 
 }

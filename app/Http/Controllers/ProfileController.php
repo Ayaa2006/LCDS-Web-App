@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Reservation; 
 use App\Models\Parrainage;  
+use App\Models\User; // Assurez-vous d'importer le modèle User
 
 class ProfileController extends Controller
 {
@@ -18,8 +19,26 @@ class ProfileController extends Controller
         }
         else {
             $reservations = Reservation::where('user_id', $user->id)->get(); // Récupère les réservations pour l'utilisateur
-            $parrainages = Parrainage::with('filleul')->where('reff_id', $user->id)->get();
-            $parrainages = Parrainage::with('parrain')->where('user_id', $user->id)->get();
+            $parrainagesStart = Parrainage::where('user_id', $user->id)
+            ->orWhere('reff_id', $user->id)
+            ->get();
+        
+        $parrainages = [];
+        foreach ($parrainagesStart as $parrainage) {
+            if ($parrainage->user_id == $user->id) {
+                // This user referred someone else (reff_id)
+                $friend = User::find($parrainage->reff_id);
+                if ($friend) {
+                    $parrainages[] = $friend;
+                }
+            } else {
+                // Someone else (user_id) referred this user
+                $friend = User::find($parrainage->user_id);
+                if ($friend) {
+                    $parrainages[] = $friend;
+                }
+            }
+        }
             return view('profile', compact('user', 'reservations', 'parrainages'));   
         }
         

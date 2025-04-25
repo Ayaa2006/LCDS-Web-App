@@ -34,6 +34,15 @@ return new class extends Migration
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
+            [
+                'id' => 2,
+                'title' => 'Parrainage',
+                'description' => 'Parrainage',
+                'point' => 100,
+                'CanLink' => 0,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
         ]);
         
     }

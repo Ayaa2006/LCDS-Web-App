@@ -1,6 +1,7 @@
 @php
 $userRole = session('role');
 $isLoggedIn = Auth::check();
+
 @endphp
 
 @if ($userRole === 'admin')
@@ -331,28 +332,27 @@ window.location.href = "{{ route('dashboard') }}";
             @endif
         </div>
 
-        @if($parrainages && $parrainages->count())
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Nom</th>
-                <th>Email</th>
-                <th>Date d'inscription</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach($parrainages as $parrainage)
-                <tr>
-                    <td>{{ $parrainage->parrain->name ?? $parrainage->filleul->name }}</td>
-                    <td>{{ $parrainage->parrain->email ?? $parrainage->filleul->email }}</td>
-                    <td>{{ $parrainage->created_at->format('F d, Y') }}</td>
-                </tr>
-            @endforeach
-        </tbody>
-    </table>
-@else
-    <p>Aucun filleul n’a encore utilisé votre code.</p>
-@endif
+        @if($parrainages && count($parrainages))
+            <div class="mt-4">
+                <h3><i class="fas fa-users me-2"></i>Parrainages</h3>
+                @foreach($parrainages as $parrainage)
+                    <div class="d-flex align-items-center justify-content-between p-3 mb-3" style="background-color: var(--light-bg); border: 1px solid var(--border-color); border-radius: 8px; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);">
+                        <div class="d-flex align-items-center">
+                            <img src="{{ $parrainage['img'] ? asset('storage/' . $parrainage['img']) : asset('storage/images/profil.jpg') }}" alt="Profile Picture" style="width: 60px; height: 60px; border-radius: 50%; object-fit: cover; margin-right: 15px; border: 2px solid var(--primary-color);">
+                            <div>
+                                <h5 style="margin: 0; color: var(--primary-color); font-weight: 600;">{{ $parrainage['name'] }}</h5>
+                                <p style="margin: 0; color: var(--text-medium); font-size: 0.9rem;">{{ $parrainage['email'] }}</p>
+                            </div>
+                        </div>
+                        <div style="color: var(--text-medium); font-size: 0.9rem;">
+                            {{ \Carbon\Carbon::parse($parrainage['created_at'])->format('F d, Y') }}
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+        @else
+            <p>Aucun filleul n’a encore utilisé votre code.</p>
+        @endif
 
 
         <div class="mt-4">
